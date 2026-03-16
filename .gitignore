@@ -27,8 +27,13 @@ ENV/
 logs/
 *.log
 
-# ── Alert Screenshots ─────────────────────────────────────────
+# ── Alert Screenshots & Snapshots ─────────────────────────────
 alert_images/
+flask_rekognition/snapshots/
+flask_rekognition/instance/
+
+# ── Flask session files ────────────────────────────────────────
+flask_rekognition/.env
 
 # ── YOLO Model Weights (large files) ──────────────────────────
 detection/models/*.pt

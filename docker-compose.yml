@@ -1,0 +1,82 @@
+version: "3.9"
+
+services:
+
+  # ── FastAPI Backend ──────────────────────────────────────────
+  backend:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: eyeq_backend
+    restart: unless-stopped
+    env_file: .env
+    environment:
+      - DATABASE_URL=postgresql://eyeq:eyeqsecret@db:5432/eyeq
+    ports:
+      - "8000:8000"
+    volumes:
+      - ./alert_images:/app/alert_images
+      - ./logs:/app/logs
+      - ./detection/models:/app/detection/models
+    depends_on:
+      db:
+        condition: service_healthy
+    command: uvicorn backend.main:app --host 0.0.0.0 --port 8000 --workers 2
+
+  # ── Streamlit Dashboard ──────────────────────────────────────
+  dashboard:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: eyeq_dashboard
+    restart: unless-stopped
+    env_file: .env
+    environment:
+      - API_BASE_URL=http://backend:8000
+    ports:
+      - "8501:8501"
+    volumes:
+      - ./alert_images:/app/alert_images
+    depends_on:
+      - backend
+    command: >
+      streamlit run frontend/streamlit_app.py
+        --server.port 8501
+        --server.address 0.0.0.0
+        --server.headless true
+        --browser.gatherUsageStats false
+
+  # ── PostgreSQL Database ──────────────────────────────────────
+  db:
+    image: postgres:15-alpine
+    container_name: eyeq_db
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: eyeq
+      POSTGRES_PASSWORD: eyeqsecret
+      POSTGRES_DB: eyeq
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U eyeq"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # ── Nginx Reverse Proxy ──────────────────────────────────────
+  nginx:
+    image: nginx:1.25-alpine
+    container_name: eyeq_nginx
+    restart: unless-stopped
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./deployment/nginx/nginx.conf:/etc/nginx/nginx.conf:ro
+      - ./deployment/nginx/ssl:/etc/nginx/ssl:ro   # mount your TLS certs here
+    depends_on:
+      - backend
+      - dashboard
+
+volumes:
+  postgres_data:

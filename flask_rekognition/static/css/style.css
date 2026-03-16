@@ -1,0 +1,101 @@
+/* ── Variables ───────────────────────────────────────────────── */
+:root {
+  --bg-darkest: #020617;
+  --bg-darker:  #0f172a;
+  --bg-dark:    #1e293b;
+  --border:     #334155;
+}
+
+body        { background: var(--bg-darkest); font-family: 'Segoe UI', system-ui, sans-serif; }
+.bg-darkest { background: var(--bg-darkest) !important; }
+.bg-darker  { background: var(--bg-darker)  !important; }
+
+/* ── Panel (card replacement) ────────────────────────────────── */
+.panel {
+  background:    var(--bg-dark);
+  border:        1px solid var(--border);
+  border-radius: 12px;
+  overflow:      hidden;
+}
+.panel-header {
+  display:         flex;
+  align-items:     center;
+  justify-content: space-between;
+  padding:         .6rem 1rem;
+  border-bottom:   1px solid var(--border);
+  font-weight:     600;
+  font-size:       .9rem;
+}
+.panel-body    { padding: 1rem; }
+.panel-footer  { border-top: 1px solid var(--border); }
+
+/* ── Stat cards ──────────────────────────────────────────────── */
+.stat-card {
+  background:    var(--bg-dark);
+  border:        1px solid var(--border);
+  border-radius: 12px;
+  padding:       .9rem 1rem;
+  display:       flex;
+  align-items:   center;
+  gap:           .75rem;
+}
+.stat-icon {
+  width:         42px;
+  height:        42px;
+  border-radius: 10px;
+  display:       flex;
+  align-items:   center;
+  justify-content: center;
+  font-size:     1.2rem;
+  flex-shrink:   0;
+}
+.stat-label { font-size: .75rem; color: #64748b; margin-bottom: 2px; }
+.stat-value { font-size: 1.5rem; font-weight: 700; line-height: 1; }
+
+/* ── Tables ──────────────────────────────────────────────────── */
+.table-dark {
+  --bs-table-bg: transparent;
+  --bs-table-hover-bg: rgba(255,255,255,.04);
+  font-size: .83rem;
+}
+.table-dark th {
+  background:  var(--bg-darker);
+  color:       #64748b;
+  font-weight: 600;
+  border-color: var(--border);
+  padding:     .45rem .75rem;
+  white-space: nowrap;
+}
+.table-dark td {
+  border-color: var(--border);
+  vertical-align: middle;
+  padding:     .4rem .75rem;
+}
+
+/* ── Form controls ───────────────────────────────────────────── */
+.form-control:focus, .form-select:focus {
+  border-color: #3b82f6 !important;
+  box-shadow:   0 0 0 2px rgba(59,130,246,.2) !important;
+}
+.form-control, .form-select, .input-group-text {
+  font-size: .875rem !important;
+}
+
+/* ── Nav tabs (login page) ───────────────────────────────────── */
+.nav-tabs .nav-link        { color: #64748b; border-color: transparent; background: transparent; }
+.nav-tabs .nav-link.active { color: #f8fafc; background: var(--bg-darker); border-color: var(--border) var(--border) transparent; }
+
+/* ── Alert flash animation ───────────────────────────────────── */
+@keyframes pulse { 0%,100%{opacity:1} 50%{opacity:.3} }
+.pulse-anim { animation: pulse 1s ease-in-out 3; }
+
+/* ── Scrollbar ───────────────────────────────────────────────── */
+::-webkit-scrollbar        { width:5px; height:5px; }
+::-webkit-scrollbar-track  { background: var(--bg-darker); }
+::-webkit-scrollbar-thumb  { background: var(--border); border-radius:4px; }
+
+/* ── Responsive ──────────────────────────────────────────────── */
+@media (max-width:576px) {
+  .stat-value { font-size: 1.2rem; }
+  .stat-icon  { width:34px; height:34px; font-size:1rem; }
+}

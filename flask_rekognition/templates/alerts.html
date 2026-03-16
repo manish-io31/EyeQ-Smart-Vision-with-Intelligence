@@ -1,0 +1,108 @@
+{% extends "base.html" %}
+{% block title %}Alerts — SurveillanceAI{% endblock %}
+
+{% block content %}
+<div class="row mt-3 g-3">
+  <div class="col-12">
+    <div class="panel">
+      <div class="panel-header flex-wrap gap-2">
+        <span><i class="bi bi-bell-fill text-danger me-2"></i>Alert History</span>
+        <div class="d-flex gap-2 flex-wrap">
+          <input id="lf" type="text" class="form-control form-control-sm bg-dark text-light border-secondary"
+                 placeholder="Filter label…" style="width:140px;"/>
+          <input id="cf" type="number" min="0" max="100"
+                 class="form-control form-control-sm bg-dark text-light border-secondary"
+                 placeholder="Min %" style="width:100px;"/>
+          <button class="btn btn-sm btn-outline-light" onclick="loadAlerts(1)">
+            <i class="bi bi-search"></i>
+          </button>
+        </div>
+      </div>
+      <div style="overflow-x:auto;">
+        <table class="table table-dark table-hover table-sm mb-0">
+          <thead>
+            <tr>
+              <th>ID</th><th>Object</th><th>Confidence</th><th>Type</th>
+              <th>Camera</th><th>SMS</th><th>Time</th>
+              {% if current_user.is_admin() %}<th></th>{% endif %}
+            </tr>
+          </thead>
+          <tbody id="body">
+            <tr><td colspan="8" class="text-muted text-center py-4">Loading…</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <div class="panel-footer d-flex justify-content-between align-items-center py-2 px-3">
+        <small class="text-muted" id="info"></small>
+        <div id="pages" class="d-flex gap-1 flex-wrap"></div>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+const isAdmin = {{ 'true' if current_user.is_admin() else 'false' }};
+let curPage = 1;
+
+async function loadAlerts(page=1) {
+  curPage = page;
+  const label = document.getElementById('lf').value.trim();
+  const conf  = document.getElementById('cf').value || 0;
+  const url   = `/api/alerts?page=${page}&per_page=25&label=${encodeURIComponent(label)}&min_confidence=${conf}`;
+  const r     = await fetch(url);
+  const d     = await r.json();
+
+  const tbody = document.getElementById('body');
+  if (!d.alerts.length) {
+    tbody.innerHTML = '<tr><td colspan="8" class="text-muted text-center py-4">No alerts found</td></tr>';
+    document.getElementById('info').textContent  = '';
+    document.getElementById('pages').innerHTML   = '';
+    return;
+  }
+
+  tbody.innerHTML = d.alerts.map(a => {
+    const timeStr = new Date(a.timestamp).toLocaleString();
+    const confBar = `<div class="d-flex align-items-center gap-1">
+      <div style="width:55px;height:5px;background:#1e293b;border-radius:3px;overflow:hidden;">
+        <div style="width:${a.confidence_score}%;height:100%;background:${a.confidence_score>=80?'#ef4444':'#f59e0b'};"></div>
+      </div>
+      <small>${a.confidence_score.toFixed(0)}%</small></div>`;
+    return `<tr>
+      <td class="text-muted">${a.id}</td>
+      <td><span class="badge bg-danger">${a.object_detected}</span></td>
+      <td>${confBar}</td>
+      <td><span class="badge" style="background:#1e40af;">${a.detection_type}</span></td>
+      <td class="text-muted small">${a.camera_source}</td>
+      <td>${a.sms_sent
+            ? '<i class="bi bi-check-circle-fill text-success"></i>'
+            : '<i class="bi bi-x-circle text-muted"></i>'}</td>
+      <td class="text-muted small">${timeStr}</td>
+      ${isAdmin ? `<td><button class="btn btn-sm btn-outline-danger py-0 px-1"
+          onclick="del(${a.id})"><i class="bi bi-trash"></i></button></td>` : ''}
+    </tr>`;
+  }).join('');
+
+  document.getElementById('info').textContent = `Page ${d.page} of ${d.pages} (${d.total} total)`;
+
+  const pDiv = document.getElementById('pages');
+  pDiv.innerHTML = '';
+  for (let p = 1; p <= Math.min(d.pages, 10); p++) {
+    const b = document.createElement('button');
+    b.className = `btn btn-sm ${p===page?'btn-danger':'btn-outline-secondary'}`;
+    b.textContent = p;
+    b.onclick = () => loadAlerts(p);
+    pDiv.appendChild(b);
+  }
+}
+
+async function del(id) {
+  if (!confirm(`Delete alert #${id}?`)) return;
+  await fetch(`/api/alerts/${id}`, { method: 'DELETE' });
+  loadAlerts(curPage);
+}
+
+loadAlerts(1);
+</script>
+{% endblock %}

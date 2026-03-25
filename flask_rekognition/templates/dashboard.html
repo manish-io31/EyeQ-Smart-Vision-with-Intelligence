@@ -1,110 +1,143 @@
 {% extends "base.html" %}
-{% block title %}Dashboard — SurveillanceAI{% endblock %}
+{% block title %}Dashboard — EyeQ{% endblock %}
 
 {% block content %}
 <div class="row mt-3 g-3">
 
-  <!-- Summary cards -->
+  <!-- ── Stat cards ───────────────────────────────────────────── -->
   <div class="col-12">
     <div class="row g-2">
+
       <div class="col-6 col-md-3">
         <div class="stat-card">
-          <div class="stat-icon" style="color:#3b82f6;background:rgba(59,130,246,.15);">
-            <i class="bi bi-eye"></i>
+          <div class="stat-icon" style="color:#06b6d4;background:rgba(6,182,212,.12);
+                                        border:1px solid rgba(6,182,212,.2);">
+            <i class="bi bi-eye-fill"></i>
           </div>
           <div>
             <div class="stat-label">Total Detections</div>
-            <div class="stat-value" id="totalDetections">—</div>
+            <div class="stat-value glow-cyan" id="totalDetections">—</div>
           </div>
         </div>
       </div>
+
       <div class="col-6 col-md-3">
         <div class="stat-card">
-          <div class="stat-icon" style="color:#ef4444;background:rgba(239,68,68,.15);">
+          <div class="stat-icon" style="color:#ef4444;background:rgba(239,68,68,.12);
+                                        border:1px solid rgba(239,68,68,.2);">
             <i class="bi bi-exclamation-triangle-fill"></i>
           </div>
           <div>
             <div class="stat-label">Total Alerts</div>
-            <div class="stat-value" id="totalAlerts">—</div>
+            <div class="stat-value glow-red" id="totalAlerts">—</div>
           </div>
         </div>
       </div>
+
       <div class="col-6 col-md-3">
         <div class="stat-card">
-          <div class="stat-icon" style="color:#f59e0b;background:rgba(245,158,11,.15);">
-            <i class="bi bi-calendar-day"></i>
+          <div class="stat-icon" style="color:#f59e0b;background:rgba(245,158,11,.12);
+                                        border:1px solid rgba(245,158,11,.2);">
+            <i class="bi bi-calendar-day-fill"></i>
           </div>
           <div>
             <div class="stat-label">Alerts Today</div>
-            <div class="stat-value" id="alertsToday">—</div>
+            <div class="stat-value" style="color:#f59e0b;" id="alertsToday">—</div>
           </div>
         </div>
       </div>
+
       <div class="col-6 col-md-3">
         <div class="stat-card">
-          <div class="stat-icon" style="color:#22c55e;background:rgba(34,197,94,.15);">
+          <div class="stat-icon" style="color:#22c55e;background:rgba(34,197,94,.12);
+                                        border:1px solid rgba(34,197,94,.2);">
             <i class="bi bi-clock-history"></i>
           </div>
           <div>
             <div class="stat-label">Last Hour</div>
-            <div class="stat-value" id="alertsLastHour">—</div>
+            <div class="stat-value" style="color:#22c55e;" id="alertsLastHour">—</div>
           </div>
         </div>
       </div>
+
     </div>
   </div>
 
-  <!-- Live camera -->
+  <!-- ── Live camera ──────────────────────────────────────────── -->
   <div class="col-12 col-xl-7">
     <div class="panel h-100">
       <div class="panel-header">
-        <span><i class="bi bi-camera-video text-danger me-2"></i>Live Camera</span>
-        <div class="d-flex gap-2 flex-wrap">
-          <select class="form-select form-select-sm bg-dark text-light border-secondary"
-                  id="camSelect" style="width:auto;">
+        <span class="d-flex align-items-center gap-2">
+          <span style="width:8px;height:8px;border-radius:50%;background:#ef4444;
+                       box-shadow:0 0 8px rgba(239,68,68,.8);display:inline-block;
+                       animation:dotPulse 1.2s ease-in-out infinite;"></span>
+          <span style="color:#ef4444;font-size:.85rem;">Live Camera</span>
+        </span>
+        <div class="d-flex gap-2 flex-wrap align-items-center">
+          <select class="form-select form-select-sm" id="camSelect"
+                  style="width:auto;font-size:.8rem !important;">
             <option value="user">Front Camera</option>
             <option value="environment" selected>Rear Camera</option>
           </select>
           <button class="btn btn-sm btn-success" id="btnStart">
             <i class="bi bi-play-fill"></i> Start
           </button>
-          <button class="btn btn-sm btn-secondary" id="btnStop" disabled>
+          <button class="btn btn-sm btn-secondary" id="btnStop" disabled
+                  style="background:rgba(71,85,105,.4);border-color:rgba(71,85,105,.4);">
             <i class="bi bi-stop-fill"></i> Stop
           </button>
-          <button class="btn btn-sm btn-outline-light" id="btnSnap" title="Snapshot">
+          <button class="btn btn-sm" id="btnSnap" title="Snapshot"
+                  style="background:rgba(6,182,212,.12);border:1px solid rgba(6,182,212,.3);
+                         color:#06b6d4;">
             <i class="bi bi-camera"></i>
           </button>
         </div>
       </div>
       <div class="panel-body p-2">
-        <div class="position-relative bg-black rounded overflow-hidden" style="aspect-ratio:16/9;">
+        <!-- Camera wrapper with corner brackets + scan line -->
+        <div class="camera-wrapper" id="cameraWrapper">
           <video id="videoFeed" class="w-100 h-100" autoplay muted playsinline
                  style="object-fit:cover;"></video>
           <canvas id="bbox" class="position-absolute top-0 start-0 w-100 h-100"
                   style="pointer-events:none;"></canvas>
-          <!-- Status bar -->
-          <div class="position-absolute bottom-0 start-0 w-100 px-2 py-1
-               d-flex justify-content-between align-items-center"
-               style="background:rgba(0,0,0,.65);font-size:.75rem;">
-            <span id="camStatus" class="text-muted">Camera stopped — click Start</span>
-            <span id="fpsText" class="text-success fw-bold"></span>
+
+          <!-- Scan line (visible when active) -->
+          <div class="scan-line" id="scanLine"></div>
+
+          <!-- REC badge -->
+          <div class="rec-badge" id="recBadge">
+            <span class="rec-dot"></span> REC
           </div>
-          <!-- Alert flash -->
+
+          <!-- Status bar -->
+          <div class="position-absolute bottom-0 start-0 w-100 px-3 py-1
+               d-flex justify-content-between align-items-center"
+               style="background:linear-gradient(0deg,rgba(0,0,0,.8),transparent);font-size:.72rem;">
+            <span id="camStatus" class="text-muted font-mono">Camera stopped — click Start</span>
+            <span id="fpsText" class="font-mono" style="color:#22c55e;font-weight:600;"></span>
+          </div>
+
+          <!-- Alert flash overlay -->
           <div id="alertFlash" class="d-none position-absolute top-0 start-0 w-100 text-center py-2
-               fw-bold text-white" style="background:rgba(220,38,38,.9);z-index:10;font-size:.9rem;">
-            ⚠ ALERT TRIGGERED — SMS SENT
+               fw-bold text-white" style="z-index:10;font-size:.85rem;letter-spacing:1px;">
+            <i class="bi bi-exclamation-triangle-fill me-2"></i>ALERT TRIGGERED — SMS SENT
           </div>
         </div>
       </div>
     </div>
   </div>
 
-  <!-- Detected objects -->
+  <!-- ── Detected objects ─────────────────────────────────────── -->
   <div class="col-12 col-xl-5">
     <div class="panel h-100">
       <div class="panel-header">
-        <span><i class="bi bi-list-ul me-2 text-info"></i>Detected Objects</span>
-        <span class="badge bg-secondary" id="detCount">0</span>
+        <span class="d-flex align-items-center gap-2">
+          <i class="bi bi-list-ul" style="color:#06b6d4;"></i>
+          <span>Detected Objects</span>
+        </span>
+        <span class="badge" id="detCount"
+              style="background:rgba(6,182,212,.15);color:#06b6d4;
+                     border:1px solid rgba(6,182,212,.3);">0</span>
       </div>
       <div style="max-height:360px;overflow-y:auto;">
         <table class="table table-dark table-hover table-sm mb-0">
@@ -112,28 +145,35 @@
             <tr>
               <th>Object</th>
               <th>Type</th>
-              <th style="width:120px;">Confidence</th>
+              <th style="width:130px;">Confidence</th>
               <th>Alert</th>
             </tr>
           </thead>
           <tbody id="detList">
-            <tr><td colspan="4" class="text-muted text-center py-4">
-              Start camera to detect objects
-            </td></tr>
+            <tr>
+              <td colspan="4" class="text-center py-5" style="color:#334155;">
+                <i class="bi bi-camera-video d-block mb-2" style="font-size:1.6rem;"></i>
+                <span style="font-size:.82rem;">Start camera to begin detection</span>
+              </td>
+            </tr>
           </tbody>
         </table>
       </div>
     </div>
   </div>
 
-  <!-- Charts -->
+  <!-- ── Charts ───────────────────────────────────────────────── -->
   <div class="col-12 col-md-7">
     <div class="panel">
       <div class="panel-header">
-        <span><i class="bi bi-graph-up me-2 text-success"></i>Detection Activity (24 h)</span>
+        <span class="d-flex align-items-center gap-2">
+          <i class="bi bi-graph-up-arrow" style="color:#22c55e;"></i>
+          <span>Detection Activity</span>
+          <span style="font-size:.7rem;color:#334155;font-weight:400;">24 hours</span>
+        </span>
       </div>
       <div class="panel-body">
-        <canvas id="freqChart" height="120"></canvas>
+        <canvas id="freqChart" height="110"></canvas>
       </div>
     </div>
   </div>
@@ -141,20 +181,31 @@
   <div class="col-12 col-md-5">
     <div class="panel">
       <div class="panel-header">
-        <span><i class="bi bi-pie-chart me-2 text-warning"></i>Top Objects</span>
+        <span class="d-flex align-items-center gap-2">
+          <i class="bi bi-pie-chart-fill" style="color:#f59e0b;"></i>
+          <span>Top Objects</span>
+        </span>
       </div>
       <div class="panel-body">
-        <canvas id="topChart" height="120"></canvas>
+        <canvas id="topChart" height="110"></canvas>
       </div>
     </div>
   </div>
 
-  <!-- Recent alerts table -->
+  <!-- ── Recent alerts ────────────────────────────────────────── -->
   <div class="col-12">
     <div class="panel">
       <div class="panel-header">
-        <span><i class="bi bi-bell-fill me-2 text-danger"></i>Recent Alerts</span>
-        <a href="{{ url_for('alerts.index') }}" class="btn btn-sm btn-outline-secondary">View All</a>
+        <span class="d-flex align-items-center gap-2">
+          <i class="bi bi-bell-fill" style="color:#ef4444;"></i>
+          <span>Recent Alerts</span>
+        </span>
+        <a href="{{ url_for('alerts.index') }}"
+           class="btn btn-sm"
+           style="background:rgba(6,182,212,.08);border:1px solid rgba(6,182,212,.25);
+                  color:#06b6d4;font-size:.78rem !important;">
+          View All <i class="bi bi-arrow-right ms-1"></i>
+        </a>
       </div>
       <div style="overflow-x:auto;">
         <table class="table table-dark table-hover table-sm mb-0">
@@ -165,7 +216,12 @@
             </tr>
           </thead>
           <tbody id="alertsBody">
-            <tr><td colspan="6" class="text-muted text-center py-3">No alerts yet</td></tr>
+            <tr>
+              <td colspan="6" class="text-center py-4" style="color:#334155;">
+                <i class="bi bi-bell-slash d-block mb-2" style="font-size:1.4rem;"></i>
+                <span style="font-size:.82rem;">No alerts yet</span>
+              </td>
+            </tr>
           </tbody>
         </table>
       </div>
@@ -176,6 +232,38 @@
 {% endblock %}
 
 {% block scripts %}
+<script>
+/* Activate camera wrapper styling when camera is running */
+document.getElementById('btnStart').addEventListener('click', () => {
+  document.getElementById('cameraWrapper').classList.add('camera-active');
+});
+document.getElementById('btnStop').addEventListener('click', () => {
+  document.getElementById('cameraWrapper').classList.remove('camera-active');
+});
+
+/* Animated count-up for stat values */
+function animateCount(el, target) {
+  if (isNaN(target)) { el.textContent = target; return; }
+  const start    = 0;
+  const duration = 900;
+  const step     = 16;
+  const steps    = duration / step;
+  const inc      = target / steps;
+  let   current  = start;
+  const timer = setInterval(() => {
+    current += inc;
+    if (current >= target) { current = target; clearInterval(timer); }
+    el.textContent = Math.round(current).toLocaleString();
+  }, step);
+}
+
+/* Patch dashboard.js stat updates to use animation */
+const _origSet = (id, val) => {
+  const el = document.getElementById(id);
+  if (el) animateCount(el, typeof val === 'number' ? val : parseInt(val) || val);
+};
+window.__setStatAnimated = _origSet;
+</script>
 <script src="{{ url_for('static', filename='js/camera.js') }}"></script>
 <script src="{{ url_for('static', filename='js/dashboard.js') }}"></script>
 {% endblock %}

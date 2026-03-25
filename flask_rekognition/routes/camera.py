@@ -16,7 +16,7 @@ from flask_login import login_required, current_user
 
 from models import db, AlertEvent, DetectionLog
 from services.rekognition_service import detector
-from services.alert_service import dispatch_alert
+from services.alert_service import dispatch_alert, _cooldown_ok, _update
 import config
 
 camera_bp = Blueprint("camera", __name__)
@@ -71,31 +71,35 @@ def detect():
         )
         db.session.add(log)
 
-        # Alert on high-confidence threats
+        # Alert on high-confidence threats — gated by per-label cooldown
         if det.get("is_alert") and confidence >= config.ALERT_CONFIDENCE_THRESHOLD:
             alert_triggered = True
 
-            if snapshot_path is None:
-                snapshot_path = _save_snapshot(image_bytes, label)
+            # Only write to DB and dispatch if cooldown has elapsed for this label
+            if _cooldown_ok(label):
+                _update(label)   # mark cooldown start before async dispatch
 
-            event = AlertEvent(
-                object_detected  = label,
-                confidence_score = confidence,
-                detection_type   = det.get("detection_type", "yolo"),
-                camera_source    = camera_source,
-                image_path       = snapshot_path,
-                alert_sent       = True,
-                sms_sent         = bool(config.TWILIO_ACCOUNT_SID),
-            )
-            db.session.add(event)
+                if snapshot_path is None:
+                    snapshot_path = _save_snapshot(image_bytes, label)
 
-            # ★ Send SMS + email to ADMIN_PHONE_NUMBER in background
-            dispatch_alert(
-                label      = label,
-                confidence = confidence,
-                camera     = camera_source,
-                image_path = snapshot_path,
-            )
+                event = AlertEvent(
+                    object_detected  = label,
+                    confidence_score = confidence,
+                    detection_type   = det.get("detection_type", "yolo"),
+                    camera_source    = camera_source,
+                    image_path       = snapshot_path,
+                    alert_sent       = True,
+                    sms_sent         = bool(config.TWILIO_ACCOUNT_SID),
+                )
+                db.session.add(event)
+
+                # ★ Send SMS + email in background
+                dispatch_alert(
+                    label      = label,
+                    confidence = confidence,
+                    camera     = camera_source,
+                    image_path = snapshot_path,
+                )
 
     db.session.commit()
 

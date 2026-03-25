@@ -22,8 +22,10 @@ AWS_SECRET_ACCESS_KEY = os.getenv("AWS_SECRET_ACCESS_KEY", "")
 AWS_REGION            = os.getenv("AWS_REGION", "us-east-1")
 
 # ─── Detection ─────────────────────────────────────────────────
-DETECTION_CONFIDENCE_THRESHOLD = float(os.getenv("DETECTION_CONFIDENCE_THRESHOLD", 55.0))
-ALERT_CONFIDENCE_THRESHOLD     = float(os.getenv("ALERT_CONFIDENCE_THRESHOLD", 75.0))
+# Lower detection threshold catches small objects (phones, knives) with fewer false negatives.
+# Alert threshold stays higher to avoid noisy SMS alerts.
+DETECTION_CONFIDENCE_THRESHOLD = float(os.getenv("DETECTION_CONFIDENCE_THRESHOLD", 35.0))
+ALERT_CONFIDENCE_THRESHOLD     = float(os.getenv("ALERT_CONFIDENCE_THRESHOLD", 65.0))
 ALERT_COOLDOWN_SECONDS         = int(os.getenv("ALERT_COOLDOWN_SECONDS", 30))
 
 # Labels that always trigger SMS/email alert

@@ -36,13 +36,6 @@ COLORS = {
     "default":    "#00E676",
 }
 
-THREAT_LABELS = {
-    "person", "knife", "gun", "pistol", "rifle", "weapon", "scissors",
-    "fire", "smoke", "mask", "cell phone", "laptop", "backpack",
-    "car", "motorcycle", "truck", "bus",
-}
-
-
 def _color(label: str, dtype: str) -> str:
     if dtype == "face":       return COLORS["face"]
     if dtype == "text":       return COLORS["text"]
@@ -50,8 +43,18 @@ def _color(label: str, dtype: str) -> str:
     return COLORS.get(label.lower(), COLORS["default"])
 
 
+def _normalize_label(label: str) -> str:
+    """Strip suffixes like ' (DEMO)' or ' (YOLO)' before matching."""
+    return label.lower().split(" (")[0].strip()
+
+
 def _is_alert(label: str, confidence: float) -> bool:
-    return (label.lower() in THREAT_LABELS
+    """
+    Return True only when the label matches a configured threat label
+    AND confidence meets the threshold. Never alerts on empty detections.
+    """
+    normalized = _normalize_label(label)
+    return (normalized in config.HIGH_THREAT_LABELS
             and confidence >= config.ALERT_CONFIDENCE_THRESHOLD)
 
 
@@ -253,13 +256,23 @@ class _YoloBackend:
 # ══════════════════════════════════════════════════════════════
 
 def _demo() -> List[dict]:
+    """
+    Demo detections. is_alert is computed using the same _is_alert() logic
+    as real backends — no hardcoded True/False.
+    """
+    items = [
+        ("Person (DEMO)", 92.5, COLORS["person"], {"Left": 0.20, "Top": 0.10, "Width": 0.35, "Height": 0.70}),
+    ]
     return [
-        {"label": "Person (DEMO)", "confidence": 92.5, "detection_type": "demo",
-         "bounding_box": {"Left": 0.20, "Top": 0.10, "Width": 0.35, "Height": 0.70},
-         "color": COLORS["person"], "is_alert": True},
-        {"label": "Cell Phone (DEMO)", "confidence": 78.3, "detection_type": "demo",
-         "bounding_box": {"Left": 0.60, "Top": 0.55, "Width": 0.15, "Height": 0.25},
-         "color": COLORS["cell phone"], "is_alert": False},
+        {
+            "label":          label,
+            "confidence":     conf,
+            "detection_type": "demo",
+            "bounding_box":   bb,
+            "color":          color,
+            "is_alert":       _is_alert(label, conf),   # computed, not hardcoded
+        }
+        for label, conf, color, bb in items
     ]
 
 

@@ -1,166 +1,108 @@
-# EYEQ - Flask Surveillance System
+# 👁️‍🗨️ EYEQ - Smart Vision with Intelligence
 
-A comprehensive surveillance system built with Flask, AWS Rekognition, and computer vision technologies for real-time object detection and alerting.
+## 📌 Project Overview
 
-## Features
+The **EYEQ - Smart Vision with Intelligence** is a full-stack intelligent surveillance application that enables real-time object detection, monitoring, and alerting using computer vision and cloud technologies. It helps in identifying potential threats and managing camera feeds through a centralized web dashboard.
 
-- **Real-time Object Detection**: Uses AWS Rekognition and YOLO (Ultralytics) for detecting objects, people, and potential threats
-- **Web-based Dashboard**: Monitor camera feeds and detection results through a responsive web interface
-- **Authentication System**: Secure login/logout with Flask-Login
-- **Alert Management**: Configurable alerts for high-threat objects with SMS and email notifications
-- **Camera Integration**: Support for multiple camera feeds with snapshot capture
-- **Database Storage**: SQLite/PostgreSQL support for storing detection data and user information
-- **Configurable Thresholds**: Adjustable confidence thresholds for detection and alerting
+---
 
-## Technologies Used
+## 🚀 Features
 
-- **Backend**: Flask, Flask-SQLAlchemy, Flask-Login
-- **Computer Vision**: AWS Rekognition, Ultralytics YOLO, OpenCV, Pillow
-- **Cloud Services**: AWS (Rekognition, S3 for storage)
-- **Communication**: Twilio (SMS), SMTP (Email)
-- **Frontend**: HTML, CSS, JavaScript
-- **Database**: SQLite (default) or PostgreSQL
+### 👨‍💼 Admin
 
-## Installation
+- Monitor multiple camera feeds
+- Configure detection thresholds
+- Manage alerts and notifications
+- View detection logs and analytics
 
-### Prerequisites
+### 👨‍💻 User
 
-- Python 3.8+
-- AWS Account with Rekognition access
-- Twilio Account (for SMS alerts)
-- SMTP Email Account (for email alerts)
+- Secure login/logout
+- View live surveillance dashboard
+- Access detection results
+- Receive alert notifications
 
-### Setup
+---
 
-1. Clone the repository:
+## 🛠 Tech Stack
 
-   ```bash
-   git clone https://github.com/yourusername/eyeq-surveillance.git
-   cd eyeq-surveillance
-   ```
+- **Backend:** Python, Flask, Flask-SQLAlchemy, Flask-Login
+- **Computer Vision:** AWS Rekognition, YOLO (Ultralytics), OpenCV, Pillow
+- **Frontend:** HTML, CSS, JavaScript
+- **Database:** SQLite / PostgreSQL
+- **Cloud Services:** AWS (Rekognition, S3)
+- **Communication:** Twilio (SMS), SMTP (Email)
 
-2. Create a virtual environment:
+---
 
-   ```bash
-   python -m venv venv
-   # On Windows:
-   venv\Scripts\activate
-   # On macOS/Linux:
-   source venv/bin/activate
-   ```
+## 🏗 Architecture
 
-3. Install dependencies:
+Camera Feed → Detection Engine (YOLO + AWS Rekognition) → Flask Backend → Database → Web Dashboard → Alerts (SMS/Email)
 
-   ```bash
-   pip install -r requirements.txt
-   ```
+---
 
-4. Create a `.env` file in the root directory with your configuration:
+## 📊 Features Implemented
 
-   ```env
-   SECRET_KEY=your-secret-key-here
-   DEBUG=true
+- Real-time object detection
+- Threat detection with configurable thresholds
+- Authentication system (Flask-Login)
+- Alert system (SMS & Email integration)
+- Camera integration with snapshot capture
+- Database storage for detections and users
+- Web-based monitoring dashboard
+- Configurable detection and alert settings
 
-   # Database
-   DATABASE_URL=sqlite:///./surveillance.db
+---
 
-   # AWS Configuration
-   AWS_ACCESS_KEY_ID=your-aws-access-key
-   AWS_SECRET_ACCESS_KEY=your-aws-secret-key
-   AWS_REGION=us-east-1
+## ⚙️ Setup Instructions
 
-   # Detection Settings
-   DETECTION_CONFIDENCE_THRESHOLD=35.0
-   ALERT_CONFIDENCE_THRESHOLD=65.0
-   ALERT_COOLDOWN_SECONDS=30
+### 1️⃣ Clone Repository
 
-   # Twilio SMS
-   TWILIO_ACCOUNT_SID=your-twilio-sid
-   TWILIO_AUTH_TOKEN=your-twilio-token
-   TWILIO_FROM_NUMBER=+1234567890
-   ADMIN_PHONE_NUMBER=+0987654321
+```bash
+git clone https://github.com/yourusername/eyeq-surveillance.git
+cd eyeq-surveillance
+```
 
-   # Email Configuration
-   EMAIL_ADDRESS=your-email@gmail.com
-   EMAIL_PASSWORD=your-email-password
-   SMTP_HOST=smtp.gmail.com
-   SMTP_PORT=587
-   ```
+2️⃣ Create Virtual Environment
 
-## Configuration
+```bash
+python -m venv venv
+venv\Scripts\activate   # Windows
+```
 
-The system supports various configuration options through environment variables:
+3️⃣ Install Dependencies
 
-- **Detection Thresholds**: Adjust `DETECTION_CONFIDENCE_THRESHOLD` and `ALERT_CONFIDENCE_THRESHOLD` to fine-tune detection sensitivity
-- **Alert Labels**: Modify `HIGH_THREAT_LABELS` in `config.py` to customize which detected objects trigger alerts
-- **Database**: Change `DATABASE_URL` to use PostgreSQL or other SQLAlchemy-supported databases
-- **Session Settings**: Configure session lifetime and cookie settings
+```bash
+pip install -r requirements.txt
+```
 
-## Usage
+4️⃣ Configure Environment Variables
 
-1. Run the application:
+```bash
+Create a .env file and add your credentials (AWS, Twilio, Email, Database).
+```
 
-   ```bash
+5️⃣ Run the Application
+
+```bash
    python flask_rekognition/app.py
-   ```
-
-2. Open your browser and navigate to `http://localhost:5000`
-
-3. Log in with default credentials (or create a new user)
-
-4. Access the dashboard to view camera feeds and detection results
-
-5. Configure cameras and alert settings through the web interface
-
-## Project Structure
-
-```
-eyeq-surveillance/
-├── flask_rekognition/
-│   ├── app.py              # Main Flask application
-│   ├── config.py           # Configuration settings
-│   ├── models.py           # Database models
-│   ├── routes/             # Flask blueprints
-│   │   ├── auth.py         # Authentication routes
-│   │   ├── dashboard.py    # Dashboard routes
-│   │   ├── camera.py       # Camera management routes
-│   │   └── alerts.py       # Alert management routes
-│   ├── services/           # Business logic services
-│   │   ├── rekognition_service.py
-│   │   └── alert_service.py
-│   ├── templates/          # HTML templates
-│   ├── static/             # CSS, JS, images
-│   └── snapshots/          # Captured images
-├── config/                 # Additional configuration
-├── detection/              # Detection models and scripts
-├── requirements.txt        # Python dependencies
-└── README.md              # This file
 ```
 
-## API Endpoints
+6️⃣ Open in Browser
 
-- `GET /` - Redirect to dashboard
-- `GET /login` - User login
-- `GET /dashboard` - Main dashboard
-- `GET /camera` - Camera management
-- `GET /alerts` - View alerts
-- `POST /api/detect` - Trigger object detection
+```bash
+http://localhost:5000
+```
 
-## Contributing
+## 📈 Future Enhancements
 
-1. Fork the repository
-2. Create a feature branch (`git checkout -b feature/amazing-feature`)
-3. Commit your changes (`git commit -m 'Add amazing feature'`)
-4. Push to the branch (`git push origin feature/amazing-feature`)
-5. Open a Pull Request
+- Face recognition system
+- Mobile app integration
+- AI-based anomaly detection
+- Role-based advanced access control
 
-## License
+---
 
-This project is licensed under the MIT License - see the LICENSE file for details.
+## 👨‍💻 Author
 
-## Acknowledgments
-
-- AWS Rekognition for object detection capabilities
-- Ultralytics for YOLO implementation
-- Flask community for the excellent web framework
-- OpenCV for computer vision utilities
+Manish Kumar S

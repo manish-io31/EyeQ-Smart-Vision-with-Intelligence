@@ -37,15 +37,11 @@ def create_app() -> Flask:
     from routes.dashboard import dashboard_bp
     from routes.camera    import camera_bp
     from routes.alerts    import alerts_bp
-    from routes.detection  import detection_bp
-    from routes.moderation import moderation_bp
 
     app.register_blueprint(auth_bp)
     app.register_blueprint(dashboard_bp)
     app.register_blueprint(camera_bp)
     app.register_blueprint(alerts_bp)
-    app.register_blueprint(detection_bp)
-    app.register_blueprint(moderation_bp)
 
     @app.route("/")
     def index():

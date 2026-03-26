@@ -99,13 +99,23 @@
             </label>
           </div>
 
-          <!-- Webcam facing selector -->
-          <div id="webcamControls">
-            <select class="form-select form-select-sm" id="camSelect"
-                    style="width:auto;font-size:.8rem !important;">
-              <option value="user">Front Camera</option>
-              <option value="environment" selected>Rear Camera</option>
+          <!-- Webcam facing selector (toggle button + hidden select for JS) -->
+          <div id="webcamControls" class="d-flex align-items-center gap-1">
+            <!-- Hidden select keeps camera.js working unchanged -->
+            <select id="camSelect" class="d-none" aria-hidden="true">
+              <option value="user">Front</option>
+              <option value="environment" selected>Rear</option>
             </select>
+            <!-- Visible toggle button -->
+            <button type="button" id="btnCamToggle"
+                    class="btn btn-sm d-flex align-items-center gap-1"
+                    title="Switch to Front Camera"
+                    style="background:rgba(6,182,212,.12);border:1px solid rgba(6,182,212,.3);
+                           color:#06b6d4;font-size:.78rem;white-space:nowrap;padding:3px 10px;">
+              <i class="bi bi-camera-video-fill"></i>
+              <span id="camFacingLabel">Rear</span>
+              <i class="bi bi-arrow-repeat" style="font-size:.75rem;opacity:.8;"></i>
+            </button>
           </div>
 
           <!-- RTSP URL input (hidden by default) -->
@@ -309,6 +319,8 @@ document.getElementById('btnStart').addEventListener('click', () => {
 document.getElementById('btnStop').addEventListener('click', () => {
   document.getElementById('cameraWrapper').classList.remove('camera-active');
 });
+
+/* Front / Rear toggle is handled entirely in camera.js to avoid double-firing */
 
 /* Animated count-up for stat values */
 function animateCount(el, target) {

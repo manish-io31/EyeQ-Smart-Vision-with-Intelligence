@@ -74,56 +74,11 @@
           <span style="color:#ef4444;font-size:.85rem;">Live Camera</span>
         </span>
         <div class="d-flex gap-2 flex-wrap align-items-center">
-
-          <!-- ── Input source selector ── -->
-          <div class="d-flex align-items-center gap-2 me-1"
-               style="background:rgba(15,23,42,.6);border:1px solid rgba(6,182,212,.18);
-                      border-radius:6px;padding:4px 10px;">
-            <span style="font-size:.7rem;color:#64748b;font-weight:600;white-space:nowrap;">
-              INPUT SOURCE
-            </span>
-            <label class="d-flex align-items-center gap-1 mb-0"
-                   style="font-size:.78rem;cursor:pointer;white-space:nowrap;">
-              <input type="radio" name="inputSource" value="webcam" id="srcWebcam"
-                     style="accent-color:#06b6d4;" checked> Webcam
-            </label>
-            <label class="d-flex align-items-center gap-1 mb-0"
-                   style="font-size:.78rem;cursor:pointer;white-space:nowrap;">
-              <input type="radio" name="inputSource" value="rtsp" id="srcRtsp"
-                     style="accent-color:#06b6d4;"> RTSP
-            </label>
-            <label class="d-flex align-items-center gap-1 mb-0"
-                   style="font-size:.78rem;cursor:pointer;white-space:nowrap;">
-              <input type="radio" name="inputSource" value="local" id="srcLocal"
-                     style="accent-color:#06b6d4;"> Local video
-            </label>
-          </div>
-
-          <!-- Webcam facing selector -->
-          <div id="webcamControls">
-            <select class="form-select form-select-sm" id="camSelect"
-                    style="width:auto;font-size:.8rem !important;">
-              <option value="user">Front Camera</option>
-              <option value="environment" selected>Rear Camera</option>
-            </select>
-          </div>
-
-          <!-- RTSP URL input (hidden by default) -->
-          <div id="rtspControls" class="d-none">
-            <input type="text" id="rtspUrl" class="form-control form-control-sm"
-                   placeholder="rtsp://user:pass@ip:554/stream"
-                   style="width:240px;font-size:.78rem;background:rgba(15,23,42,.8);
-                          border-color:rgba(6,182,212,.3);color:#e2e8f0;">
-          </div>
-
-          <!-- Local file picker (hidden by default) -->
-          <div id="localControls" class="d-none">
-            <input type="file" id="localFile" accept="video/*"
-                   class="form-control form-control-sm"
-                   style="width:190px;font-size:.78rem;background:rgba(15,23,42,.8);
-                          border-color:rgba(6,182,212,.3);color:#e2e8f0;">
-          </div>
-
+          <select class="form-select form-select-sm" id="camSelect"
+                  style="width:auto;font-size:.8rem !important;">
+            <option value="user">Front Camera</option>
+            <option value="environment" selected>Rear Camera</option>
+          </select>
           <button class="btn btn-sm btn-success" id="btnStart">
             <i class="bi bi-play-fill"></i> Start
           </button>
@@ -143,9 +98,6 @@
         <div class="camera-wrapper" id="cameraWrapper">
           <video id="videoFeed" class="w-100 h-100" autoplay muted playsinline
                  style="object-fit:cover;"></video>
-          <!-- RTSP feed displayed as MJPEG img (hidden until RTSP mode active) -->
-          <img id="rtspFeed" class="w-100 h-100 d-none"
-               style="object-fit:cover;" alt="RTSP stream">
           <canvas id="bbox" class="position-absolute top-0 start-0 w-100 h-100"
                   style="pointer-events:none;"></canvas>
 
@@ -206,27 +158,6 @@
             </tr>
           </tbody>
         </table>
-      </div>
-    </div>
-  </div>
-
-  <!-- ── Detected Text ───────────────────────────────────────── -->
-  <div class="col-12">
-    <div class="panel">
-      <div class="panel-header">
-        <span class="d-flex align-items-center gap-2">
-          <i class="bi bi-fonts" style="color:#00e676;"></i>
-          <span>Detected Text</span>
-        </span>
-        <span class="badge" id="textCount"
-              style="background:rgba(0,230,118,.12);color:#00e676;
-                     border:1px solid rgba(0,230,118,.25);">0</span>
-      </div>
-      <div class="panel-body py-2 px-3" id="textPanel"
-           style="min-height:48px;display:flex;flex-wrap:wrap;gap:.5rem;align-items:center;">
-        <span style="font-size:.78rem;color:#334155;" id="textEmpty">
-          <i class="bi bi-fonts me-1"></i>No text detected yet
-        </span>
       </div>
     </div>
   </div>

@@ -3,12 +3,15 @@ Camera / Detection Blueprint
 POST /api/detect  — receive base64 frame → detect all objects → save DB → fire alerts
 GET  /api/status  — service health
 POST /api/snapshot — save frame without detection
+GET  /api/rtsp/feed — threaded MJPEG stream from RTSP/OpenCV source
 """
 
 import base64
 import json
 import logging
 import os
+import queue as _queue
+import threading
 from datetime import datetime
 
 import cv2
@@ -170,13 +173,72 @@ def rtsp_feed():
     )
 
 
+# ── Threaded capture ────────────────────────────────────────────────────────
+class _ThreadedCap:
+    """
+    Reads frames from an OpenCV source in a background daemon thread so the
+    main generator never blocks waiting for a slow camera/network decode.
+    The queue is capped at 2 frames — old frames are discarded to keep latency
+    low (we always want the newest frame, not a backlog).
+    """
+    _MAXSIZE = 2
+
+    def __init__(self, url: str):
+        self._cap   = cv2.VideoCapture(url)
+        self._q     = _queue.Queue(maxsize=self._MAXSIZE)
+        self._stop  = threading.Event()
+        self._thread = threading.Thread(target=self._reader, daemon=True)
+        self._thread.start()
+
+    def _reader(self):
+        while not self._stop.is_set():
+            ret, frame = self._cap.read()
+            if not ret:
+                break
+            # Drop oldest frame if queue is full so we never accumulate lag
+            if self._q.full():
+                try:
+                    self._q.get_nowait()
+                except _queue.Empty:
+                    pass
+            self._q.put(frame)
+
+    def read(self):
+        """Returns (True, frame) or (False, None) on timeout."""
+        try:
+            return True, self._q.get(timeout=1.0)
+        except _queue.Empty:
+            return False, None
+
+    def release(self):
+        self._stop.set()
+        self._cap.release()
+
+
+_RTSP_FRAME_SKIP = 2   # encode every Nth frame (reduces CPU/bandwidth)
+_RTSP_MAX_W      = 640  # resize wider streams to this width
+
+
 def _gen_rtsp_frames(url: str):
-    cap = cv2.VideoCapture(url)
+    cap     = _ThreadedCap(url)
+    frame_n = 0
     try:
         while True:
             ret, frame = cap.read()
             if not ret:
                 break
+            frame_n += 1
+            if frame_n % _RTSP_FRAME_SKIP != 0:
+                continue
+            # Resize to cap bandwidth without distorting aspect ratio
+            h, w = frame.shape[:2]
+            if w > _RTSP_MAX_W:
+                scale = _RTSP_MAX_W / w
+                frame = cv2.resize(
+                    frame,
+                    (int(w * scale), int(h * scale)),
+                    interpolation=cv2.INTER_LINEAR,
+                )
             ok, buf = cv2.imencode(".jpg", frame, [cv2.IMWRITE_JPEG_QUALITY, 75])
             if not ok:
                 continue

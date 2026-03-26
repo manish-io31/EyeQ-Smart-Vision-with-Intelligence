@@ -11,8 +11,7 @@ import logging
 import os
 from datetime import datetime
 
-import cv2
-from flask import Blueprint, request, jsonify, Response, stream_with_context
+from flask import Blueprint, request, jsonify
 from flask_login import login_required, current_user
 
 from models import db, AlertEvent, DetectionLog
@@ -155,35 +154,6 @@ def _save_snapshot(image_bytes: bytes, label: str) -> str:
         logger.error("Snapshot save failed: %s", e)
         return ""
     return path
-
-
-@camera_bp.route("/api/rtsp/feed")
-@login_required
-def rtsp_feed():
-    """Stream MJPEG frames from an RTSP (or any OpenCV-readable) source."""
-    url = request.args.get("url", "").strip()
-    if not url:
-        return jsonify({"error": "Missing url parameter"}), 400
-    return Response(
-        stream_with_context(_gen_rtsp_frames(url)),
-        mimetype="multipart/x-mixed-replace; boundary=frame",
-    )
-
-
-def _gen_rtsp_frames(url: str):
-    cap = cv2.VideoCapture(url)
-    try:
-        while True:
-            ret, frame = cap.read()
-            if not ret:
-                break
-            ok, buf = cv2.imencode(".jpg", frame, [cv2.IMWRITE_JPEG_QUALITY, 75])
-            if not ok:
-                continue
-            yield (b"--frame\r\nContent-Type: image/jpeg\r\n\r\n"
-                   + buf.tobytes() + b"\r\n")
-    finally:
-        cap.release()
 
 
 def _mask_phone(phone: str) -> str:

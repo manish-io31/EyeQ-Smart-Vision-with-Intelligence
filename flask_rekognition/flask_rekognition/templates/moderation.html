@@ -1,0 +1,830 @@
+{% extends "base.html" %}
+{% block title %}Moderation — EyeQ{% endblock %}
+
+{% block content %}
+<style>
+/* ── Age gate modal — z-index fix ───────────────────────────────── */
+/* Bootstrap backdrop = 1040, modal = 1055.
+   Navbar uses 1000. Force modal stack above everything. */
+.modal-backdrop { z-index: 1040 !important; pointer-events: auto !important; }
+#ageModal       { z-index: 1055 !important; pointer-events: auto !important; }
+#ageModal .modal-dialog  { pointer-events: auto !important; }
+#ageModal .modal-content {
+  background: #0f172a;
+  border: 1px solid rgba(239,68,68,.35);
+  border-radius: 14px;
+  pointer-events: auto !important;
+  position: relative;
+  z-index: 1056;
+}
+#ageModal input, #ageModal button, #ageModal a {
+  pointer-events: auto !important;
+  position: relative;
+  z-index: 1057;
+}
+#ageModal .modal-header { border-bottom: 1px solid rgba(239,68,68,.18); padding: 1.2rem 1.5rem .8rem; }
+#ageModal .modal-body   { padding: 1.2rem 1.5rem; }
+#ageModal .modal-footer { border-top: 1px solid rgba(51,65,85,.5); padding: .8rem 1.5rem; }
+
+/* ── Panels ─────────────────────────────────────────────────────── */
+.mod-panel {
+  background: rgba(15,23,42,.85);
+  border: 1px solid rgba(255,255,255,.07);
+  border-radius: 10px;
+  overflow: hidden;
+}
+.mod-hdr {
+  background: rgba(239,68,68,.06);
+  border-bottom: 1px solid rgba(239,68,68,.15);
+  padding: .55rem 1rem;
+  font-size: .78rem;
+  font-weight: 600;
+  letter-spacing: .8px;
+  color: #94a3b8;
+  text-transform: uppercase;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+/* ── Results table ──────────────────────────────────────────────── */
+.mod-table th {
+  font-size: .7rem; letter-spacing: .8px; text-transform: uppercase;
+  color: #475569; border-color: rgba(51,65,85,.5);
+}
+.mod-table td { font-size: .82rem; border-color: rgba(51,65,85,.4); vertical-align: middle; }
+.row-unsafe td { background: rgba(239,68,68,.10) !important; }
+
+/* ── Preview wrapper ────────────────────────────────────────────── */
+#previewWrapper {
+  position: relative;
+  border-radius: 8px;
+  overflow: hidden;
+  background: #0a0f1e;
+  min-height: 280px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid rgba(239,68,68,.1);
+}
+#previewImg, #previewVideo {
+  max-width: 100%;
+  max-height: 420px;
+  object-fit: contain;
+  border-radius: 6px;
+  display: none;
+  transition: filter .3s ease;
+}
+.blurred { filter: blur(24px) !important; }
+
+/* ── Blur overlay ───────────────────────────────────────────────── */
+#blurOverlay {
+  display: none;
+  position: absolute;
+  inset: 0;
+  z-index: 5;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  background: rgba(0,0,0,.3);
+  gap: .6rem;
+  border-radius: 8px;
+}
+
+/* ── Spinner ────────────────────────────────────────────────────── */
+#spinnerOverlay {
+  display: none;
+  position: absolute;
+  inset: 0;
+  background: rgba(0,0,0,.7);
+  align-items: center;
+  justify-content: center;
+  z-index: 10;
+  border-radius: 8px;
+  flex-direction: column;
+  gap: .6rem;
+}
+.spin-ring {
+  width: 52px; height: 52px;
+  border: 4px solid rgba(239,68,68,.2);
+  border-top-color: #ef4444;
+  border-radius: 50%;
+  animation: spin .8s linear infinite;
+}
+@keyframes spin { to { transform: rotate(360deg); } }
+
+/* ── Drop zones ─────────────────────────────────────────────────── */
+.drop-zone {
+  border: 2px dashed rgba(239,68,68,.25);
+  border-radius: 8px;
+  cursor: pointer;
+  transition: border-color .2s, background .2s;
+  background: rgba(239,68,68,.03);
+  text-align: center;
+  padding: 1.4rem;
+}
+.drop-zone:hover, .drop-zone.drag-over {
+  border-color: rgba(239,68,68,.6);
+  background: rgba(239,68,68,.08);
+}
+
+/* ── Buttons ────────────────────────────────────────────────────── */
+.btn-mod {
+  background: rgba(239,68,68,.12);
+  border: 1px solid rgba(239,68,68,.3);
+  color: #ef4444;
+  font-size: .82rem;
+  font-weight: 600;
+  padding: .45rem 1.1rem;
+  border-radius: 6px;
+  cursor: pointer;
+}
+.btn-mod:hover { background: rgba(239,68,68,.22); color: #f87171; }
+
+.btn-view {
+  background: rgba(239,68,68,.15);
+  border: 2px solid rgba(239,68,68,.55);
+  color: #ef4444;
+  font-size: .85rem;
+  font-weight: 700;
+  padding: .55rem 1.6rem;
+  border-radius: 8px;
+  cursor: pointer;
+  letter-spacing: .4px;
+}
+.btn-view:hover { background: rgba(239,68,68,.28); color: #fca5a5; }
+
+/* ── Alert banner ───────────────────────────────────────────────── */
+#alertBanner {
+  display: none;
+  background: rgba(239,68,68,.12);
+  border: 1px solid rgba(239,68,68,.4);
+  border-radius: 6px;
+  padding: .55rem 1rem;
+  font-size: .82rem;
+  font-weight: 600;
+  color: #ef4444;
+  animation: pulseRed 1.4s ease-in-out 3;
+}
+@keyframes pulseRed {
+  0%,100% { box-shadow: none; }
+  50% { box-shadow: 0 0 14px 4px rgba(239,68,68,.3); }
+}
+
+/* ── Confidence bar ─────────────────────────────────────────────── */
+.cb-bg   { width:70px;height:5px;background:#1e293b;border-radius:3px;overflow:hidden;display:inline-block;vertical-align:middle;margin-right:4px; }
+.cb-fill { height:100%;border-radius:3px; }
+
+/* ── Badges ─────────────────────────────────────────────────────── */
+.badge-unsafe { background:rgba(239,68,68,.2);border:1px solid rgba(239,68,68,.4);color:#ef4444;font-size:.67rem;padding:2px 7px;border-radius:4px;font-weight:700; }
+.badge-safe   { background:rgba(34,197,94,.12);border:1px solid rgba(34,197,94,.25);color:#22c55e;font-size:.67rem;padding:2px 7px;border-radius:4px;font-weight:700; }
+
+/* ── Type-toggle ────────────────────────────────────────────────── */
+.type-btn {
+  font-size: .78rem; padding: .3rem .95rem; border-radius: 6px;
+  background: rgba(51,65,85,.4);
+  border: 1px solid rgba(71,85,105,.4);
+  color: #64748b; cursor: pointer; font-weight: 600;
+}
+.type-btn.active {
+  background: rgba(239,68,68,.15);
+  border-color: rgba(239,68,68,.4);
+  color: #ef4444;
+}
+</style>
+
+<!-- ════════════════════════════════════════════════════════════════
+     AGE VERIFICATION MODAL
+     ════════════════════════════════════════════════════════════════ -->
+<div class="modal fade" id="ageModal" tabindex="-1"
+     data-bs-backdrop="static" data-bs-keyboard="false">
+  <div class="modal-dialog modal-dialog-centered" style="max-width:420px;">
+    <div class="modal-content">
+
+      <div class="modal-header">
+        <div class="d-flex align-items-center gap-3">
+          <span style="width:42px;height:42px;border-radius:10px;
+                       background:rgba(239,68,68,.12);border:1px solid rgba(239,68,68,.3);
+                       display:flex;align-items:center;justify-content:center;flex-shrink:0;">
+            <i class="bi bi-shield-lock-fill" style="color:#ef4444;font-size:1.1rem;"></i>
+          </span>
+          <div>
+            <div style="font-size:1rem;font-weight:700;color:#e2e8f0;">Age Verification</div>
+            <div style="font-size:.72rem;color:#475569;">Content restricted to 18+ users</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="modal-body">
+        <p style="font-size:.82rem;color:#64748b;margin-bottom:1.1rem;line-height:1.6;">
+          This module contains sensitive content including potentially explicit or graphic material
+          detected by AWS Rekognition. Please confirm your date of birth to continue.
+        </p>
+
+        <label style="font-size:.75rem;color:#94a3b8;font-weight:600;
+                      letter-spacing:.6px;text-transform:uppercase;">
+          Date of Birth
+        </label>
+        <input type="date" id="dobInput" class="form-control mt-1"
+               style="background:rgba(15,23,42,.8);border-color:rgba(239,68,68,.3);
+                      color:#e2e8f0;font-size:.9rem;">
+
+        <div id="ageError" style="display:none;margin-top:.6rem;font-size:.8rem;color:#ef4444;">
+          <i class="bi bi-exclamation-circle me-1"></i>
+          <span id="ageErrorMsg"></span>
+        </div>
+      </div>
+
+      <div class="modal-footer justify-content-between">
+        <a href="{{ url_for('dashboard.index') }}"
+           style="font-size:.78rem;color:#475569;">
+          <i class="bi bi-arrow-left me-1"></i>Go back
+        </a>
+        <button id="btnVerifyAge" class="btn btn-sm btn-mod" style="min-width:140px;">
+          Verify &amp; Continue
+          <span id="verifySpinner"
+                class="spinner-border spinner-border-sm ms-2 d-none"
+                style="color:#ef4444;"></span>
+        </button>
+      </div>
+
+    </div>
+  </div>
+</div>
+
+<!-- ════════════════════════════════════════════════════════════════
+     ACCESS DENIED
+     ════════════════════════════════════════════════════════════════ -->
+<div id="accessDenied" class="d-none mt-5"
+     style="align-items:center;justify-content:center;">
+  <div style="max-width:420px;margin:0 auto;text-align:center;padding:2rem 1rem;">
+    <div style="font-size:3.5rem;margin-bottom:1rem;">🔞</div>
+    <div style="font-size:1.15rem;font-weight:700;color:#ef4444;margin-bottom:.5rem;">
+      Access Restricted
+    </div>
+    <div id="accessMsg"
+         style="font-size:.85rem;color:#64748b;margin-bottom:1.5rem;line-height:1.6;">
+      You must be 18 or older to access this content moderation module.
+    </div>
+    <a href="{{ url_for('dashboard.index') }}" class="btn btn-sm"
+       style="background:rgba(6,182,212,.12);border:1px solid rgba(6,182,212,.3);color:#06b6d4;">
+      <i class="bi bi-arrow-left me-1"></i> Back to Dashboard
+    </a>
+    <div class="mt-3">
+      <button id="btnRetryAge" class="btn btn-sm btn-mod">
+        <i class="bi bi-arrow-clockwise me-1"></i> Try Again
+      </button>
+    </div>
+  </div>
+</div>
+
+<!-- ════════════════════════════════════════════════════════════════
+     MAIN CONTENT  (hidden until age verified)
+     ════════════════════════════════════════════════════════════════ -->
+<div id="moderationContent" class="{{ 'd-none' if not age_verified }}">
+
+  <!-- Page header -->
+  <div class="mt-3 mb-3 text-center">
+    <div style="font-size:1.3rem;font-weight:700;letter-spacing:2px;
+                color:#ef4444;text-transform:uppercase;">
+      Content Moderation
+    </div>
+    <div style="font-size:.72rem;color:#64748b;letter-spacing:1px;
+                text-transform:uppercase;margin-bottom:.8rem;">
+      EyeQ — Image &amp; Video Safety Analysis
+    </div>
+
+    <!-- Alert banner -->
+    <div id="alertBanner" class="mb-3 mx-auto" style="max-width:720px;">
+      <i class="bi bi-shield-exclamation me-2"></i>
+      <span id="alertBannerText">Unsafe content detected</span>
+    </div>
+
+    <!-- Image / Video toggle -->
+    <div class="d-flex justify-content-center gap-2 mb-2">
+      <button class="type-btn active" id="btnTypeImage">
+        <i class="bi bi-image me-1"></i>Image
+      </button>
+      <button class="type-btn" id="btnTypeVideo">
+        <i class="bi bi-camera-video me-1"></i>Video
+      </button>
+    </div>
+  </div>
+
+  <div class="row g-3">
+
+    <!-- ── LEFT — Results table ────────────────────────────── -->
+    <div class="col-12 col-xl-5">
+      <div class="mod-panel h-100 d-flex flex-column">
+
+        <div class="mod-hdr">
+          <span class="d-flex align-items-center gap-2">
+            <i class="bi bi-shield-fill" style="color:#ef4444;"></i>
+            Moderation Results
+          </span>
+          <span class="badge" id="resultCount"
+                style="background:rgba(239,68,68,.12);color:#ef4444;
+                       border:1px solid rgba(239,68,68,.25);">0</span>
+        </div>
+
+        <div style="flex:1;overflow-y:auto;min-height:340px;">
+          <table class="table table-dark table-hover table-sm mb-0 mod-table">
+            <thead class="sticky-top">
+              <tr>
+                <th style="width:45%;">Label</th>
+                <th style="width:35%;">Confidence</th>
+                <th style="width:20%;">Status</th>
+              </tr>
+            </thead>
+            <tbody id="resultsTbody">
+              <tr>
+                <td colspan="3" class="text-center py-5" style="color:#334155;">
+                  <i class="bi bi-shield d-block mb-2" style="font-size:1.8rem;"></i>
+                  <span style="font-size:.8rem;">
+                    Upload image or video to run moderation
+                  </span>
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+
+        <div class="p-3 border-top" style="border-color:rgba(51,65,85,.5) !important;">
+          <button id="btnDownload" disabled class="btn btn-sm w-100"
+                  style="background:rgba(239,68,68,.08);border:1px solid rgba(239,68,68,.2);
+                         color:#ef4444;font-size:.8rem;font-weight:600;">
+            <i class="bi bi-download me-1"></i> Download Report
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- ── RIGHT — Preview ─────────────────────────────────── -->
+    <div class="col-12 col-xl-7">
+      <div class="mod-panel">
+
+        <div class="mod-hdr">
+          <span class="d-flex align-items-center gap-2">
+            <i class="bi bi-eye-fill" style="color:#f59e0b;"></i>
+            Preview
+          </span>
+          <span id="modeTag" style="font-size:.7rem;color:#475569;"></span>
+        </div>
+
+        <!-- Preview area -->
+        <div class="p-3">
+          <div id="previewWrapper">
+
+            <!-- Spinner overlay -->
+            <div id="spinnerOverlay">
+              <div class="spin-ring"></div>
+              <div id="spinnerMsg"
+                   style="font-size:.74rem;color:#ef4444;letter-spacing:1px;">
+                ANALYZING…
+              </div>
+            </div>
+
+            <!-- Placeholder -->
+            <div id="previewPlaceholder" class="text-center p-5">
+              <i class="bi bi-shield-slash"
+                 style="font-size:2.6rem;color:rgba(239,68,68,.25);"></i>
+              <div style="font-size:.82rem;color:#475569;margin-top:.6rem;">
+                No content uploaded yet
+              </div>
+            </div>
+
+            <!-- Image -->
+            <img id="previewImg" alt="Preview">
+
+            <!-- Video -->
+            <video id="previewVideo" controls playsinline></video>
+
+            <!-- Blur overlay -->
+            <div id="blurOverlay">
+              <i class="bi bi-eye-slash-fill"
+                 style="font-size:2.2rem;color:#ef4444;"></i>
+              <div style="font-size:.85rem;color:#fca5a5;font-weight:700;">
+                Unsafe Content Detected
+              </div>
+              <button class="btn-view" id="btnViewContent">
+                <i class="bi bi-eye me-1"></i> View Content
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <!-- Upload controls -->
+        <div class="px-3 pb-3">
+
+          <!-- Image upload UI -->
+          <div id="imageUploadUI">
+            <div class="drop-zone" id="dropZoneImg"
+                 onclick="document.getElementById('fileImage').click()">
+              <i class="bi bi-cloud-upload"
+                 style="font-size:2rem;color:rgba(239,68,68,.35);"></i>
+              <div style="font-size:.82rem;color:#475569;margin:.35rem 0;">
+                Drop image here or click to upload
+              </div>
+              <div style="font-size:.7rem;color:#334155;">JPEG / PNG — max 5 MB</div>
+            </div>
+            <div class="mt-2 d-flex align-items-center gap-2 flex-wrap">
+              <button class="btn-mod"
+                      onclick="document.getElementById('fileImage').click()">
+                <i class="bi bi-upload me-1"></i> Upload Image
+              </button>
+              <span style="font-size:.7rem;color:#334155;">JPEG or PNG — max 5 MB</span>
+            </div>
+          </div>
+
+          <!-- Video upload UI (hidden by default) -->
+          <div id="videoUploadUI" class="d-none">
+            <div class="drop-zone" id="dropZoneVid"
+                 onclick="document.getElementById('fileVideo').click()">
+              <i class="bi bi-camera-video"
+                 style="font-size:2rem;color:rgba(239,68,68,.35);"></i>
+              <div style="font-size:.82rem;color:#475569;margin:.35rem 0;">
+                Drop video here or click to upload
+              </div>
+              <div style="font-size:.7rem;color:#334155;">MP4 / MOV / AVI — max 100 MB</div>
+            </div>
+            <div class="mt-2 d-flex align-items-center gap-2 flex-wrap">
+              <button class="btn-mod"
+                      onclick="document.getElementById('fileVideo').click()">
+                <i class="bi bi-upload me-1"></i> Upload Video
+              </button>
+              <span style="font-size:.7rem;color:#334155;">
+                MP4, MOV, AVI — max 100 MB
+                <span style="color:#334155;"> · Video analysis samples 10 frames</span>
+              </span>
+            </div>
+          </div>
+
+          <!-- Sample thumbnails -->
+          <div class="mt-3">
+            <div style="font-size:.7rem;color:#475569;text-transform:uppercase;
+                        letter-spacing:.8px;margin-bottom:.4rem;">
+              Sample Images
+            </div>
+            <div class="d-flex gap-2">
+              {% for i in range(1, 4) %}
+              <div class="sample-thumb"
+                   data-src="{{ url_for('static', filename='samples/sample' ~ i ~ '.jpg') }}"
+                   style="width:54px;height:42px;border-radius:5px;cursor:pointer;
+                          background:rgba(51,65,85,.6);
+                          border:1px solid rgba(239,68,68,.2);
+                          display:flex;align-items:center;justify-content:center;
+                          overflow:hidden;transition:border-color .15s;">
+                <i class="bi bi-image" style="color:#334155;font-size:.9rem;"></i>
+              </div>
+              {% endfor %}
+            </div>
+          </div>
+
+        </div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<!-- Hidden inputs -->
+<input type="file" id="fileImage" accept="image/jpeg,image/png" class="d-none">
+<input type="file" id="fileVideo"
+       accept="video/mp4,video/quicktime,video/x-msvideo,video/x-matroska"
+       class="d-none">
+
+{% endblock %}
+
+
+{% block scripts %}
+<script>
+(function () {
+  'use strict';
+
+  /* ── State from server ──────────────────────────────────── */
+  const AGE_VERIFIED = {{ 'true' if age_verified else 'false' }};
+
+  /* ── DOM refs ───────────────────────────────────────────── */
+  const dobInput       = document.getElementById('dobInput');
+  const btnVerify      = document.getElementById('btnVerifyAge');
+  const verifySpinner  = document.getElementById('verifySpinner');
+  const ageError       = document.getElementById('ageError');
+  const ageErrorMsg    = document.getElementById('ageErrorMsg');
+  const modContent     = document.getElementById('moderationContent');
+  const accessDenied   = document.getElementById('accessDenied');
+  const accessMsg      = document.getElementById('accessMsg');
+  const btnRetryAge    = document.getElementById('btnRetryAge');
+
+  const tbody          = document.getElementById('resultsTbody');
+  const resultCount    = document.getElementById('resultCount');
+  const btnDownload    = document.getElementById('btnDownload');
+  const alertBanner    = document.getElementById('alertBanner');
+  const alertBannerTxt = document.getElementById('alertBannerText');
+  const previewImg     = document.getElementById('previewImg');
+  const previewVideo   = document.getElementById('previewVideo');
+  const previewPH      = document.getElementById('previewPlaceholder');
+  const blurOverlay    = document.getElementById('blurOverlay');
+  const btnView        = document.getElementById('btnViewContent');
+  const spinner        = document.getElementById('spinnerOverlay');
+  const spinnerMsg     = document.getElementById('spinnerMsg');
+  const modeTag        = document.getElementById('modeTag');
+
+  const btnTypeImg     = document.getElementById('btnTypeImage');
+  const btnTypeVid     = document.getElementById('btnTypeVideo');
+  const imgUpUI        = document.getElementById('imageUploadUI');
+  const vidUpUI        = document.getElementById('videoUploadUI');
+  const fileImage      = document.getElementById('fileImage');
+  const fileVideo      = document.getElementById('fileVideo');
+
+  let lastResults = [];
+
+  /* ══════════════════════════════════════════════════════════
+     AGE GATE
+     ══════════════════════════════════════════════════════════ */
+  const ageModal = new bootstrap.Modal(
+    document.getElementById('ageModal'), { backdrop: 'static', keyboard: false }
+  );
+
+  // Prevent future/absurd dates
+  dobInput.max = new Date().toISOString().split('T')[0];
+  dobInput.min = '1900-01-01';
+
+  if (!AGE_VERIFIED) ageModal.show();
+
+  btnVerify.addEventListener('click', submitAge);
+  dobInput.addEventListener('keydown', e => { if (e.key === 'Enter') submitAge(); });
+
+  btnRetryAge.addEventListener('click', () => {
+    accessDenied.classList.add('d-none');
+    dobInput.value = '';
+    ageError.style.display = 'none';
+    ageModal.show();
+  });
+
+  async function submitAge() {
+    const dob = dobInput.value;
+    if (!dob) { showAgeErr('Please select your date of birth.'); return; }
+
+    verifySpinner.classList.remove('d-none');
+    btnVerify.disabled = true;
+    ageError.style.display = 'none';
+
+    try {
+      const res  = await fetch('/verify-age', {
+        method:  'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body:    JSON.stringify({ dob }),
+      });
+      const data = await res.json();
+
+      if (data.verified) {
+        // Reload so Flask re-renders the page with age_verified=True in session
+        window.location.reload();
+      } else {
+        ageModal.hide();
+        accessMsg.textContent = data.message ||
+          'You must be 18 or older to access this content.';
+        accessDenied.style.display = 'flex';
+        accessDenied.classList.remove('d-none');
+      }
+    } catch (e) {
+      showAgeErr('Verification failed — please try again.');
+    } finally {
+      verifySpinner.classList.add('d-none');
+      btnVerify.disabled = false;
+    }
+  }
+
+  function showAgeErr(msg) {
+    ageErrorMsg.textContent = msg;
+    ageError.style.display = 'block';
+  }
+
+  /* ══════════════════════════════════════════════════════════
+     MEDIA TYPE TOGGLE
+     ══════════════════════════════════════════════════════════ */
+  btnTypeImg.addEventListener('click', () => switchType('image'));
+  btnTypeVid.addEventListener('click', () => switchType('video'));
+
+  function switchType(type) {
+    const isImg = type === 'image';
+    btnTypeImg.classList.toggle('active', isImg);
+    btnTypeVid.classList.toggle('active', !isImg);
+    imgUpUI.classList.toggle('d-none', !isImg);
+    vidUpUI.classList.toggle('d-none', isImg);
+    resetPreview();
+    resetResults();
+  }
+
+  /* ══════════════════════════════════════════════════════════
+     FILE INPUTS & DRAG-DROP
+     ══════════════════════════════════════════════════════════ */
+  fileImage.addEventListener('change', () => {
+    if (fileImage.files[0]) handleFile(fileImage.files[0]);
+  });
+  fileVideo.addEventListener('change', () => {
+    if (fileVideo.files[0]) handleFile(fileVideo.files[0]);
+  });
+
+  setupDrop('dropZoneImg', fileImage);
+  setupDrop('dropZoneVid', fileVideo);
+
+  function setupDrop(zoneId, input) {
+    const zone = document.getElementById(zoneId);
+    if (!zone) return;
+    zone.addEventListener('dragover',  e => { e.preventDefault(); zone.classList.add('drag-over'); });
+    zone.addEventListener('dragleave', () => zone.classList.remove('drag-over'));
+    zone.addEventListener('drop', e => {
+      e.preventDefault();
+      zone.classList.remove('drag-over');
+      const file = e.dataTransfer.files[0];
+      if (file) handleFile(file);
+    });
+  }
+
+  /* ── Sample thumbnails ───────────────────────────────────── */
+  document.querySelectorAll('.sample-thumb').forEach(thumb => {
+    thumb.addEventListener('click', e => {
+      e.stopPropagation();
+      fetch(thumb.dataset.src)
+        .then(r => r.ok ? r.blob() : Promise.reject())
+        .then(blob => handleFile(new File([blob], 'sample.jpg', { type: 'image/jpeg' })))
+        .catch(() => toast('Sample image not found.', 'warning'));
+    });
+  });
+
+  /* ── View Content (unblur) ───────────────────────────────── */
+  btnView.addEventListener('click', () => {
+    blurOverlay.style.display = 'none';
+    previewImg.classList.remove('blurred');
+    previewVideo.classList.remove('blurred');
+  });
+
+  /* ══════════════════════════════════════════════════════════
+     HANDLE FILE — preview + send
+     ══════════════════════════════════════════════════════════ */
+  function handleFile(file) {
+    const isVid = file.type.startsWith('video/') ||
+                  /\.(mp4|mov|avi|mkv|webm)$/i.test(file.name);
+    resetPreview();
+    resetResults();
+    previewPH.style.display = 'none';
+
+    const url = URL.createObjectURL(file);
+    if (isVid) {
+      previewVideo.src = url;
+      previewVideo.style.display = 'block';
+      moderateVideo(file);
+    } else {
+      previewImg.src = url;
+      previewImg.style.display = 'block';
+      moderateImage(file);
+    }
+  }
+
+  /* ══════════════════════════════════════════════════════════
+     MODERATION REQUESTS
+     ══════════════════════════════════════════════════════════ */
+  async function moderateImage(file) {
+    showSpinner('ANALYZING IMAGE…');
+    const fd = new FormData();
+    fd.append('image', file);
+    try {
+      const res  = await fetch('/moderate-image', { method: 'POST', body: fd });
+      const data = await res.json();
+      if (!res.ok) { toast(data.error || 'Detection failed', 'danger'); return; }
+      renderResults(data);
+      modeTag.textContent = `MODE: ${(data.mode || '').toUpperCase()}`;
+    } catch (e) {
+      toast('Request failed: ' + e.message, 'danger');
+    } finally {
+      hideSpinner();
+    }
+  }
+
+  async function moderateVideo(file) {
+    showSpinner('UPLOADING & ANALYZING VIDEO…');
+    const fd = new FormData();
+    fd.append('video', file);
+    try {
+      const res  = await fetch('/moderate-video', { method: 'POST', body: fd });
+      const data = await res.json();
+      if (!res.ok) { toast(data.error || 'Detection failed', 'danger'); return; }
+      renderResults(data);
+      modeTag.textContent = `MODE: ${(data.mode || '').toUpperCase()}`;
+    } catch (e) {
+      toast('Request failed: ' + e.message, 'danger');
+    } finally {
+      hideSpinner();
+    }
+  }
+
+  /* ══════════════════════════════════════════════════════════
+     RENDER RESULTS
+     ══════════════════════════════════════════════════════════ */
+  function renderResults(data) {
+    lastResults = data.labels || [];
+    resultCount.textContent = lastResults.length;
+
+    if (!lastResults.length) {
+      tbody.innerHTML =
+        '<tr><td colspan="3" class="text-muted text-center py-4">No results returned</td></tr>';
+      return;
+    }
+
+    tbody.innerHTML = lastResults.map(l => {
+      const conf   = l.confidence.toFixed(1);
+      const barClr = l.is_unsafe ? '#ef4444' : '#22c55e';
+      const badge  = l.is_unsafe
+        ? '<span class="badge-unsafe">UNSAFE</span>'
+        : '<span class="badge-safe">SAFE</span>';
+      return `<tr class="${l.is_unsafe ? 'row-unsafe' : ''}">
+        <td class="fw-semibold" style="color:${l.is_unsafe ? '#f87171' : '#e2e8f0'};">
+          ${esc(l.name)}
+        </td>
+        <td>
+          <span class="cb-bg">
+            <span class="cb-fill"
+                  style="width:${Math.min(conf, 100)}%;background:${barClr};"></span>
+          </span>
+          <small style="color:${barClr};">${conf}%</small>
+        </td>
+        <td>${badge}</td>
+      </tr>`;
+    }).join('');
+
+    btnDownload.disabled = false;
+
+    if (data.is_unsafe) {
+      // Blur preview
+      previewImg.classList.add('blurred');
+      previewVideo.classList.add('blurred');
+      blurOverlay.style.display = 'flex';
+      // Alert banner
+      const n = lastResults.filter(l => l.is_unsafe).length;
+      alertBannerTxt.textContent =
+        `UNSAFE CONTENT — ${n} issue${n !== 1 ? 's' : ''} detected`;
+      alertBanner.style.display = 'block';
+    }
+  }
+
+  /* ── Download CSV ─────────────────────────────────────────── */
+  btnDownload.addEventListener('click', () => {
+    if (!lastResults.length) return;
+    const rows = [['Label', 'Confidence (%)', 'Status']];
+    lastResults.forEach(l =>
+      rows.push([`"${l.name}"`, l.confidence.toFixed(2), l.status])
+    );
+    const a = document.createElement('a');
+    a.href = URL.createObjectURL(
+      new Blob([rows.map(r => r.join(',')).join('\n')], { type: 'text/csv' })
+    );
+    a.download = `eyeq_moderation_${Date.now()}.csv`;
+    a.click();
+  });
+
+  /* ── Helpers ──────────────────────────────────────────────── */
+  function resetPreview() {
+    previewImg.src = '';
+    previewImg.style.display = 'none';
+    previewImg.classList.remove('blurred');
+    previewVideo.src = '';
+    previewVideo.style.display = 'none';
+    previewVideo.classList.remove('blurred');
+    blurOverlay.style.display = 'none';
+    alertBanner.style.display = 'none';
+    previewPH.style.display = 'block';
+    modeTag.textContent = '';
+  }
+
+  function resetResults() {
+    tbody.innerHTML = '';
+    resultCount.textContent = '0';
+    btnDownload.disabled = true;
+    lastResults = [];
+    alertBanner.style.display = 'none';
+  }
+
+  function showSpinner(msg) {
+    spinnerMsg.textContent = msg || 'ANALYZING…';
+    spinner.style.display = 'flex';
+  }
+  function hideSpinner() { spinner.style.display = 'none'; }
+
+  function esc(s) {
+    return (s || '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+  }
+
+  function toast(msg, type = 'info') {
+    const t = document.createElement('div');
+    t.className    = `alert alert-${type} position-fixed bottom-0 end-0 m-3 shadow`;
+    t.style.zIndex = 9999;
+    t.style.fontSize = '.84rem';
+    t.textContent  = msg;
+    document.body.appendChild(t);
+    setTimeout(() => t.remove(), 4000);
+  }
+
+})();
+</script>
+{% endblock %}

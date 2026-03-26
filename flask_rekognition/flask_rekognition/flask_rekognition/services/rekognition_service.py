@@ -12,7 +12,6 @@ All methods return a unified list:
 """
 
 import base64
-import io
 import logging
 import os
 from typing import List, Optional
@@ -253,67 +252,6 @@ class _YoloBackend:
 
 
 # ══════════════════════════════════════════════════════════════
-# Optional pytesseract OCR — text detection for YOLO / demo mode
-# ══════════════════════════════════════════════════════════════
-
-try:
-    import pytesseract as _tess
-    from PIL import Image as _PILImg
-    _PYTESS = True
-except ImportError:
-    _PYTESS = False
-
-
-class _TesseractTextDetector:
-    """
-    Wraps pytesseract for word-level text detection.
-    Returns the same unified dict format as other backends.
-    Silently no-ops if pytesseract / Tesseract binary is not installed.
-    """
-    def __init__(self):
-        self.available = _PYTESS
-        if self.available:
-            logger.info("pytesseract OCR text detection available")
-        else:
-            logger.debug("pytesseract not installed — text detection disabled in YOLO/demo mode")
-
-    def detect(self, image_bytes: bytes) -> List[dict]:
-        if not self.available:
-            return []
-        try:
-            img  = _PILImg.open(io.BytesIO(image_bytes)).convert("RGB")
-            data = _tess.image_to_data(img, output_type=_tess.Output.DICT)
-            w_img, h_img = img.size
-            out  = []
-            for i in range(len(data["text"])):
-                word = (data["text"][i] or "").strip()
-                try:
-                    conf = float(data["conf"][i])
-                except (ValueError, TypeError):
-                    conf = 0.0
-                if not word or conf < 60:
-                    continue
-                bb = {
-                    "Left":   data["left"][i]  / w_img,
-                    "Top":    data["top"][i]   / h_img,
-                    "Width":  data["width"][i] / w_img,
-                    "Height": data["height"][i] / h_img,
-                }
-                out.append({
-                    "label":          f'Text: "{word}"',
-                    "confidence":     round(conf, 2),
-                    "detection_type": "text",
-                    "bounding_box":   bb,
-                    "color":          COLORS["text"],
-                    "is_alert":       False,
-                })
-            return out
-        except Exception as e:
-            logger.warning("pytesseract OCR failed: %s", e)
-            return []
-
-
-# ══════════════════════════════════════════════════════════════
 # Demo mode (no AWS, no YOLO)
 # ══════════════════════════════════════════════════════════════
 
@@ -346,7 +284,6 @@ class DetectionService:
     def __init__(self):
         self._rekognition = _RekognitionBackend()
         self._yolo        = _YoloBackend()
-        self._ocr         = _TesseractTextDetector()
 
         if self._rekognition.available:
             self.mode = "rekognition"
@@ -363,15 +300,11 @@ class DetectionService:
 
     def detect_all(self, image_bytes: bytes) -> List[dict]:
         if self.mode == "rekognition":
-            # Rekognition already includes its own text detection (_text())
             dets = self._rekognition.detect(image_bytes)
         elif self.mode == "yolo":
             dets = self._yolo.detect(image_bytes)
-            # Augment with OCR text detection when pytesseract is available
-            dets.extend(self._ocr.detect(image_bytes))
         else:
             dets = _demo()
-            dets.extend(self._ocr.detect(image_bytes))
 
         # Sort: alerts first, then by confidence desc
         return sorted(dets, key=lambda d: (-int(d["is_alert"]), -d["confidence"]))

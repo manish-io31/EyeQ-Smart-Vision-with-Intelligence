@@ -1,0 +1,568 @@
+{% extends "base.html" %}
+{% block title %}Image Detection — EyeQ{% endblock %}
+
+{% block content %}
+<style>
+  /* ── Page-scoped styles ─────────────────────────────────── */
+  .imgdet-title {
+    font-size: 1.35rem;
+    font-weight: 700;
+    letter-spacing: 2px;
+    color: #f59e0b;
+    text-align: center;
+    text-transform: uppercase;
+  }
+  .imgdet-sub {
+    font-size: .72rem;
+    color: #ef4444;
+    text-align: center;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+    margin-bottom: 1.2rem;
+  }
+  .imgdet-panel {
+    background: rgba(15,23,42,.85);
+    border: 1px solid rgba(255,255,255,.07);
+    border-radius: 10px;
+    overflow: hidden;
+  }
+  .imgdet-panel-header {
+    background: rgba(6,182,212,.06);
+    border-bottom: 1px solid rgba(6,182,212,.15);
+    padding: .55rem 1rem;
+    font-size: .78rem;
+    font-weight: 600;
+    letter-spacing: .8px;
+    color: #94a3b8;
+    text-transform: uppercase;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+  }
+  /* Results table */
+  #resultsTable th {
+    font-size: .7rem;
+    letter-spacing: .8px;
+    text-transform: uppercase;
+    color: #475569;
+    border-color: rgba(51,65,85,.5);
+  }
+  #resultsTable td {
+    font-size: .82rem;
+    border-color: rgba(51,65,85,.4);
+    vertical-align: middle;
+  }
+  .row-threat td { background: rgba(239,68,68,.10) !important; }
+  .row-misc   td { background: rgba(245,158,11,.06) !important; }
+
+  /* Image drop zone */
+  #dropZone {
+    border: 2px dashed rgba(6,182,212,.3);
+    border-radius: 8px;
+    min-height: 320px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-direction: column;
+    cursor: pointer;
+    transition: border-color .2s, background .2s;
+    position: relative;
+    overflow: hidden;
+    background: rgba(6,182,212,.03);
+  }
+  #dropZone:hover, #dropZone.drag-over {
+    border-color: rgba(6,182,212,.7);
+    background: rgba(6,182,212,.07);
+  }
+  #previewImg {
+    max-width: 100%;
+    max-height: 420px;
+    border-radius: 6px;
+    object-fit: contain;
+    display: none;
+  }
+  /* Spinner overlay */
+  #spinnerOverlay {
+    position: absolute;
+    inset: 0;
+    background: rgba(0,0,0,.65);
+    display: none;
+    align-items: center;
+    justify-content: center;
+    z-index: 5;
+    border-radius: 8px;
+  }
+  .spinner-ring {
+    width: 52px; height: 52px;
+    border: 4px solid rgba(6,182,212,.2);
+    border-top-color: #06b6d4;
+    border-radius: 50%;
+    animation: spin .8s linear infinite;
+  }
+  @keyframes spin { to { transform: rotate(360deg); } }
+
+  /* Alert banner */
+  #alertBanner {
+    display: none;
+    background: rgba(239,68,68,.15);
+    border: 1px solid rgba(239,68,68,.4);
+    border-radius: 6px;
+    padding: .55rem 1rem;
+    font-size: .82rem;
+    font-weight: 600;
+    color: #ef4444;
+    letter-spacing: .5px;
+    animation: pulseRed 1.4s ease-in-out 3;
+  }
+  @keyframes pulseRed {
+    0%,100% { box-shadow: 0 0 0 0 rgba(239,68,68,0); }
+    50%      { box-shadow: 0 0 12px 4px rgba(239,68,68,.35); }
+  }
+
+  /* Confidence bar */
+  .conf-bar-bg {
+    width: 70px; height: 5px;
+    background: #1e293b;
+    border-radius: 3px;
+    overflow: hidden;
+    display: inline-block;
+    vertical-align: middle;
+    margin-right: 4px;
+  }
+  .conf-bar-fill { height: 100%; border-radius: 3px; }
+
+  /* Upload / Download buttons */
+  .btn-upload {
+    background: #f59e0b;
+    border: none;
+    color: #000;
+    font-weight: 700;
+    font-size: .82rem;
+    letter-spacing: .5px;
+    padding: .45rem 1.1rem;
+    border-radius: 6px;
+  }
+  .btn-upload:hover { background: #fbbf24; color: #000; }
+  .btn-download {
+    background: rgba(6,182,212,.12);
+    border: 1px solid rgba(6,182,212,.3);
+    color: #06b6d4;
+    font-size: .8rem;
+    font-weight: 600;
+    padding: .4rem 1rem;
+    border-radius: 6px;
+  }
+  .btn-download:hover {
+    background: rgba(6,182,212,.22);
+    color: #06b6d4;
+  }
+  .badge-threat {
+    background: rgba(239,68,68,.2);
+    border: 1px solid rgba(239,68,68,.4);
+    color: #ef4444;
+    font-size: .67rem;
+    padding: 2px 6px;
+    border-radius: 4px;
+    font-weight: 600;
+  }
+  .badge-misc {
+    background: rgba(245,158,11,.15);
+    border: 1px solid rgba(245,158,11,.3);
+    color: #f59e0b;
+    font-size: .67rem;
+    padding: 2px 6px;
+    border-radius: 4px;
+    font-weight: 600;
+  }
+  .badge-safe {
+    background: rgba(34,197,94,.12);
+    border: 1px solid rgba(34,197,94,.25);
+    color: #22c55e;
+    font-size: .67rem;
+    padding: 2px 6px;
+    border-radius: 4px;
+    font-weight: 600;
+  }
+</style>
+
+<!-- Page header -->
+<div class="mt-3 mb-3">
+  <div class="imgdet-title">Object and Scene Detection</div>
+  <div class="imgdet-sub">
+    EyeQ can automatically label objects, concepts and scenes in your images,
+    and also provides a confidence score
+  </div>
+
+  <!-- Alert banner (shown when threats found) -->
+  <div id="alertBanner" class="mb-3 mx-auto" style="max-width:780px;">
+    <i class="bi bi-exclamation-triangle-fill me-2"></i>
+    <span id="alertBannerText">THREAT DETECTED — review highlighted objects below</span>
+  </div>
+</div>
+
+<div class="row g-3">
+
+  <!-- ── LEFT: Results table ───────────────────────────────── -->
+  <div class="col-12 col-xl-5">
+    <div class="imgdet-panel h-100 d-flex flex-column">
+
+      <div class="imgdet-panel-header">
+        <span class="d-flex align-items-center gap-2">
+          <i class="bi bi-list-ul" style="color:#06b6d4;"></i>
+          Results
+        </span>
+        <span class="badge" id="resultCount"
+              style="background:rgba(6,182,212,.15);color:#06b6d4;
+                     border:1px solid rgba(6,182,212,.3);">0</span>
+      </div>
+
+      <!-- Scrollable table -->
+      <div style="flex:1;overflow-y:auto;min-height:340px;">
+        <table class="table table-dark table-hover table-sm mb-0" id="resultsTable">
+          <thead class="sticky-top">
+            <tr>
+              <th style="width:40%;">Label</th>
+              <th style="width:35%;">Confidence</th>
+              <th style="width:25%;">Status</th>
+            </tr>
+          </thead>
+          <tbody id="resultsTbody">
+            <tr id="emptyRow">
+              <td colspan="3" class="text-center py-5" style="color:#334155;">
+                <i class="bi bi-image d-block mb-2" style="font-size:1.8rem;"></i>
+                <span style="font-size:.8rem;">Upload an image to see results</span>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <!-- Download button -->
+      <div class="p-3 border-top" style="border-color:rgba(51,65,85,.5) !important;">
+        <button class="btn btn-download w-100" id="btnDownload" disabled>
+          <i class="bi bi-download me-1"></i> Download List
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── RIGHT: Image display + upload ────────────────────── -->
+  <div class="col-12 col-xl-7">
+    <div class="imgdet-panel">
+
+      <div class="imgdet-panel-header">
+        <span class="d-flex align-items-center gap-2">
+          <i class="bi bi-image-fill" style="color:#f59e0b;"></i>
+          Preview
+        </span>
+        <span id="modeTag2" style="font-size:.7rem;color:#475569;"></span>
+      </div>
+
+      <!-- Drop zone / image preview -->
+      <div class="p-3">
+        <div id="dropZone" onclick="document.getElementById('fileInput').click()">
+          <!-- Spinner overlay -->
+          <div id="spinnerOverlay">
+            <div class="text-center">
+              <div class="spinner-ring mx-auto mb-2"></div>
+              <div style="font-size:.75rem;color:#06b6d4;letter-spacing:1px;">
+                ANALYZING…
+              </div>
+            </div>
+          </div>
+
+          <!-- Placeholder (shown before upload) -->
+          <div id="dropPlaceholder" class="text-center">
+            <i class="bi bi-cloud-upload" style="font-size:2.5rem;color:rgba(6,182,212,.4);"></i>
+            <div style="font-size:.82rem;color:#475569;margin-top:.5rem;">
+              Drop image here or click to upload
+            </div>
+            <div style="font-size:.7rem;color:#334155;margin-top:.25rem;">
+              JPEG / PNG — max 5 MB
+            </div>
+          </div>
+
+          <!-- Preview image (shown after upload) -->
+          <img id="previewImg" alt="Uploaded image">
+        </div>
+      </div>
+
+      <!-- Upload section -->
+      <div class="px-3 pb-3">
+        <div class="row g-2 align-items-center">
+          <div class="col">
+            <div style="font-size:.72rem;color:#475569;text-transform:uppercase;
+                        letter-spacing:.8px;margin-bottom:.4rem;">
+              Use your own image
+            </div>
+            <button class="btn btn-upload" id="btnUpload"
+                    onclick="document.getElementById('fileInput').click()">
+              <i class="bi bi-upload me-1"></i> Upload an Image…
+            </button>
+            <div style="font-size:.68rem;color:#334155;margin-top:.3rem;">
+              Upload your image — JPEG or PNG format and no larger than 5MB
+            </div>
+          </div>
+          <!-- Sample images -->
+          <div class="col-auto">
+            <div style="font-size:.72rem;color:#475569;text-transform:uppercase;
+                        letter-spacing:.8px;margin-bottom:.4rem;">
+              Try with sample images
+            </div>
+            <div class="d-flex gap-2" id="sampleImgs">
+              <div class="sample-thumb" data-src="{{ url_for('static', filename='samples/sample1.jpg') }}"
+                   style="width:52px;height:40px;border-radius:4px;cursor:pointer;
+                          background:rgba(51,65,85,.6);border:1px solid rgba(6,182,212,.2);
+                          overflow:hidden;display:flex;align-items:center;justify-content:center;">
+                <i class="bi bi-image" style="color:#334155;font-size:.9rem;"></i>
+              </div>
+              <div class="sample-thumb" data-src="{{ url_for('static', filename='samples/sample2.jpg') }}"
+                   style="width:52px;height:40px;border-radius:4px;cursor:pointer;
+                          background:rgba(51,65,85,.6);border:1px solid rgba(6,182,212,.2);
+                          overflow:hidden;display:flex;align-items:center;justify-content:center;">
+                <i class="bi bi-image" style="color:#334155;font-size:.9rem;"></i>
+              </div>
+              <div class="sample-thumb" data-src="{{ url_for('static', filename='samples/sample3.jpg') }}"
+                   style="width:52px;height:40px;border-radius:4px;cursor:pointer;
+                          background:rgba(51,65,85,.6);border:1px solid rgba(6,182,212,.2);
+                          overflow:hidden;display:flex;align-items:center;justify-content:center;">
+                <i class="bi bi-image" style="color:#334155;font-size:.9rem;"></i>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+</div>
+
+<!-- Detected Text panel (shown when text detections present) -->
+<div class="row g-3 mt-0" id="textRow" style="display:none !important;">
+  <div class="col-12">
+    <div class="imgdet-panel">
+      <div class="imgdet-panel-header">
+        <span class="d-flex align-items-center gap-2">
+          <i class="bi bi-fonts" style="color:#00e676;"></i>
+          Detected Text
+        </span>
+        <span id="imgTextCount"
+              style="background:rgba(0,230,118,.12);color:#00e676;
+                     border:1px solid rgba(0,230,118,.25);
+                     font-size:.7rem;padding:2px 8px;border-radius:10px;">0</span>
+      </div>
+      <div class="p-3 d-flex flex-wrap gap-2" id="imgTextChips"></div>
+    </div>
+  </div>
+</div>
+
+<!-- Hidden file input -->
+<input type="file" id="fileInput" accept="image/jpeg,image/png" class="d-none">
+{% endblock %}
+
+
+{% block scripts %}
+<script>
+(function () {
+  'use strict';
+
+  const fileInput    = document.getElementById('fileInput');
+  const dropZone     = document.getElementById('dropZone');
+  const previewImg   = document.getElementById('previewImg');
+  const dropPH       = document.getElementById('dropPlaceholder');
+  const spinner      = document.getElementById('spinnerOverlay');
+  const tbody        = document.getElementById('resultsTbody');
+  const resultCount  = document.getElementById('resultCount');
+  const btnDownload  = document.getElementById('btnDownload');
+  const alertBanner  = document.getElementById('alertBanner');
+  const alertText    = document.getElementById('alertBannerText');
+  const modeTag2     = document.getElementById('modeTag2');
+  const emptyRow     = document.getElementById('emptyRow');
+  const textRow      = document.getElementById('textRow');
+  const imgTextChips = document.getElementById('imgTextChips');
+  const imgTextCount = document.getElementById('imgTextCount');
+
+  let lastResults = [];   // for CSV download
+
+  // ── File selection ─────────────────────────────────────────
+  fileInput.addEventListener('change', () => {
+    if (fileInput.files[0]) loadAndDetect(fileInput.files[0]);
+  });
+
+  // ── Drag & drop ────────────────────────────────────────────
+  dropZone.addEventListener('dragover', e => {
+    e.preventDefault();
+    dropZone.classList.add('drag-over');
+  });
+  dropZone.addEventListener('dragleave', () => dropZone.classList.remove('drag-over'));
+  dropZone.addEventListener('drop', e => {
+    e.preventDefault();
+    dropZone.classList.remove('drag-over');
+    const file = e.dataTransfer.files[0];
+    if (file && file.type.startsWith('image/')) loadAndDetect(file);
+  });
+
+  // ── Sample image thumbnails ────────────────────────────────
+  document.querySelectorAll('.sample-thumb').forEach(thumb => {
+    thumb.addEventListener('click', e => {
+      e.stopPropagation();
+      const src = thumb.dataset.src;
+      if (!src) return;
+      fetch(src)
+        .then(r => r.ok ? r.blob() : Promise.reject('not found'))
+        .then(blob => {
+          const file = new File([blob], 'sample.jpg', { type: 'image/jpeg' });
+          loadAndDetect(file);
+        })
+        .catch(() => toast('Sample image not found.', 'warning'));
+    });
+  });
+
+  // ── Main flow ──────────────────────────────────────────────
+  function loadAndDetect(file) {
+    // Show preview immediately
+    const reader = new FileReader();
+    reader.onload = e => {
+      previewImg.src = e.target.result;
+      previewImg.style.display = 'block';
+      dropPH.style.display = 'none';
+    };
+    reader.readAsDataURL(file);
+
+    // Send to backend
+    detect(file);
+  }
+
+  async function detect(file) {
+    spinner.style.display = 'flex';
+    alertBanner.style.display = 'none';
+    tbody.innerHTML = '';
+    resultCount.textContent = '0';
+    btnDownload.disabled = true;
+    lastResults = [];
+    textRow.style.setProperty('display', 'none', 'important');
+
+    const fd = new FormData();
+    fd.append('image', file);
+
+    try {
+      const res = await fetch('/detect-image', { method: 'POST', body: fd });
+      const data = await res.json();
+
+      if (!res.ok) {
+        toast(data.error || 'Detection failed', 'danger');
+        return;
+      }
+
+      renderResults(data);
+    } catch (e) {
+      toast('Request failed: ' + e.message, 'danger');
+    } finally {
+      spinner.style.display = 'none';
+    }
+  }
+
+  function renderResults(data) {
+    lastResults = data.labels || [];
+    resultCount.textContent = lastResults.length;
+    modeTag2.textContent = data.detection_mode ? data.detection_mode.toUpperCase() : '';
+
+    if (!lastResults.length) {
+      tbody.innerHTML = `<tr><td colspan="3" class="text-center py-4 text-muted">
+        No objects detected above confidence threshold.</td></tr>`;
+      return;
+    }
+
+    tbody.innerHTML = lastResults.map(lbl => {
+      const conf   = lbl.confidence.toFixed(1);
+      const barClr = lbl.is_threat ? '#ef4444' : (lbl.is_misc ? '#f59e0b' : '#22c55e');
+      const badge  = lbl.is_threat
+        ? '<span class="badge-threat">THREAT</span>'
+        : lbl.is_misc
+          ? '<span class="badge-misc">MISC</span>'
+          : '<span class="badge-safe">SAFE</span>';
+      const rowCls = lbl.is_threat ? 'row-threat' : (lbl.is_misc ? 'row-misc' : '');
+
+      return `<tr class="${rowCls}">
+        <td class="fw-semibold" style="color:${lbl.is_threat ? '#f87171' : '#e2e8f0'};">
+          ${escHtml(lbl.name)}
+        </td>
+        <td>
+          <span class="conf-bar-bg">
+            <span class="conf-bar-fill" style="width:${Math.min(conf,100)}%;background:${barClr};"></span>
+          </span>
+          <small style="color:${barClr};">${conf}%</small>
+        </td>
+        <td>${badge}</td>
+      </tr>`;
+    }).join('');
+
+    btnDownload.disabled = false;
+    renderTextPanel(lastResults);
+
+    // Show alert banner if any threats
+    if (data.alert_triggered) {
+      const threatCount = lastResults.filter(l => l.is_threat).length;
+      alertText.textContent =
+        `ALERT — ${threatCount} potential threat${threatCount > 1 ? 's' : ''} detected`;
+      alertBanner.style.display = 'block';
+    }
+  }
+
+  // ── Detected Text panel ────────────────────────────────────
+  function renderTextPanel(labels) {
+    const textItems = labels.filter(l => l.detection_type === 'text');
+    if (!textItems.length) {
+      textRow.style.setProperty('display', 'none', 'important');
+      return;
+    }
+    textRow.style.removeProperty('display');
+    imgTextCount.textContent = textItems.length;
+    imgTextChips.innerHTML = textItems.map(l => {
+      const raw = l.name.replace(/^Text:\s*"(.+)"$/, '$1');
+      return `<span style="background:rgba(0,230,118,.1);border:1px solid rgba(0,230,118,.25);
+                           color:#00e676;font-size:.78rem;padding:4px 12px;border-radius:20px;
+                           font-family:monospace;letter-spacing:.3px;
+                           display:inline-flex;align-items:center;gap:6px;">
+                <i class="bi bi-fonts" style="font-size:.72rem;"></i>
+                ${escHtml(raw)}
+                <span style="color:rgba(0,230,118,.5);font-size:.7rem;">
+                  ${l.confidence.toFixed(0)}%
+                </span>
+              </span>`;
+    }).join('');
+  }
+
+  // ── Download CSV ───────────────────────────────────────────
+  btnDownload.addEventListener('click', () => {
+    if (!lastResults.length) return;
+    const rows = [['Label', 'Confidence (%)', 'Status']];
+    lastResults.forEach(l => {
+      const status = l.is_threat ? 'THREAT' : l.is_misc ? 'MISC' : 'SAFE';
+      rows.push([`"${l.name}"`, l.confidence.toFixed(2), status]);
+    });
+    const csv = rows.map(r => r.join(',')).join('\n');
+    const a = document.createElement('a');
+    a.href = URL.createObjectURL(new Blob([csv], { type: 'text/csv' }));
+    a.download = `eyeq_detection_${Date.now()}.csv`;
+    a.click();
+  });
+
+  // ── Utilities ──────────────────────────────────────────────
+  function escHtml(str) {
+    return str.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+  }
+
+  function toast(msg, type = 'info') {
+    const t = document.createElement('div');
+    t.className    = `alert alert-${type} position-fixed bottom-0 end-0 m-3 shadow`;
+    t.style.zIndex = 9999;
+    t.style.fontSize = '.84rem';
+    t.textContent  = msg;
+    document.body.appendChild(t);
+    setTimeout(() => t.remove(), 4000);
+  }
+})();
+</script>
+{% endblock %}

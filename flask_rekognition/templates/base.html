@@ -39,6 +39,18 @@
                 style="display:none;font-size:.6rem;vertical-align:middle;"></span>
         </a>
       </li>
+      <li class="nav-item">
+        <a class="nav-link {% if request.endpoint=='detection.index' %}active{% endif %}"
+           href="{{ url_for('detection.index') }}">
+          <i class="bi bi-image me-1"></i>Image Detection
+        </a>
+      </li>
+      <li class="nav-item">
+        <a class="nav-link {% if request.endpoint=='moderation.index' %}active{% endif %}"
+           href="{{ url_for('moderation.index') }}">
+          <i class="bi bi-shield-exclamation me-1"></i>Moderation
+        </a>
+      </li>
     </ul>
     <ul class="navbar-nav ms-auto align-items-center gap-2 mt-2 mt-lg-0">
       <li class="nav-item">
@@ -98,7 +110,7 @@
   {% endwith %}
 </div>
 
-<main class="container-fluid px-3 pb-5" style="position:relative;z-index:1;">
+<main class="container-fluid px-3 pb-5" style="position:relative;">
   {% block content %}{% endblock %}
 </main>
 

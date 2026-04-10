@@ -1,8 +1,7 @@
 # EyeQ — Smart Vision Surveillance System
 
-Complete A-to-Z technical documentation for the current project state.
+## Complete Project Documentation
 
----
 
 ## Table of Contents
 

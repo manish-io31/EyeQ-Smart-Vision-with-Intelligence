@@ -15,6 +15,7 @@ import base64
 import io
 import logging
 import os
+import re
 from typing import List, Optional
 
 import config
@@ -46,7 +47,14 @@ def _color(label: str, dtype: str) -> str:
 
 def _normalize_label(label: str) -> str:
     """Strip suffixes like ' (DEMO)' or ' (YOLO)' before matching."""
-    return label.lower().split(" (")[0].strip()
+    base = label.lower().split(" (")[0].strip()
+    # normalize separators and remove punctuation noise
+    base = base.replace("-", " ").replace("_", " ")
+    base = re.sub(r"[^a-z0-9\s]+", " ", base)
+    return re.sub(r"\s+", " ", base).strip()
+
+
+_THREAT_NORMALIZED = {_normalize_label(x) for x in config.HIGH_THREAT_LABELS}
 
 
 def _is_alert(label: str, confidence: float) -> bool:
@@ -55,8 +63,20 @@ def _is_alert(label: str, confidence: float) -> bool:
     AND confidence meets the threshold. Never alerts on empty detections.
     """
     normalized = _normalize_label(label)
-    return (normalized in config.HIGH_THREAT_LABELS
-            and confidence >= config.ALERT_CONFIDENCE_THRESHOLD)
+    if confidence < config.ALERT_CONFIDENCE_THRESHOLD or not normalized:
+        return False
+
+    # exact match
+    if normalized in _THREAT_NORMALIZED:
+        return True
+
+    # partial/compound match:
+    #  - "unauthorized person near gate" should match "unauthorized person"
+    #  - "mobile phone" should match tokenized aliases from list
+    for t in _THREAT_NORMALIZED:
+        if t and (t in normalized or normalized in t):
+            return True
+    return False
 
 
 # ══════════════════════════════════════════════════════════════
@@ -125,7 +145,7 @@ class _RekognitionBackend:
                 out.append({"label": name, "confidence": conf,
                             "detection_type": "scene", "bounding_box": None,
                             "color": _color(name, "label"),
-                            "is_alert": name.lower() in THREAT_LABELS and conf >= 90})
+                            "is_alert": _is_alert(name, conf)})
         return out
 
     def _faces(self, image_bytes):

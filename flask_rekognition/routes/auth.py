@@ -53,7 +53,7 @@ def register():
             flash("Username already taken.", "danger")
             return render_template("login.html", show_register=True)
 
-        user = User(username=username, email=email or None, role="admin")
+        user = User(username=username, email=email or None, role="user")
         user.set_password(password)
         db.session.add(user)
         db.session.commit()

@@ -43,9 +43,9 @@
   const offCtx = document.createElement("canvas").getContext("2d");
 
   // ── Config ──────────────────────────────────────────────────────
-  const DETECT_INTERVAL = 500;   // ms between backend detection calls
-  const MAX_W           = 640;   // frame width sent to backend (better accuracy)
-  const QUALITY         = 0.75;  // JPEG quality for detection frame
+  const DETECT_INTERVAL = 250;   // faster detection loop
+  const MAX_W           = 480;   // lower payload for higher throughput
+  const QUALITY         = 0.60;  // lighter JPEG transfer
 
   // ── State ───────────────────────────────────────────────────────
   let stream         = null;

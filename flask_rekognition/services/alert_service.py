@@ -244,14 +244,15 @@ def send_email(label: str, confidence: float, camera: str = "webcam",
 
 def dispatch_alert(label: str, confidence: float, camera: str = "webcam",
                    image_path: Optional[str] = None):
-    """Fire SMS + email in a background thread (non-blocking)."""
-    def _fire():
-        sms_ok   = send_sms(label, confidence, camera, use_cooldown=False)
-        tg_ok    = send_telegram(label, confidence, camera, image_path, use_cooldown=False)
-        email_ok = send_email(label, confidence, camera, image_path)
-        logger.info(
-            "Alert dispatched  sms=%s  telegram=%s  email=%s  label=%s",
-            sms_ok, tg_ok, email_ok, label
-        )
-
-    threading.Thread(target=_fire, daemon=True).start()
+    """
+    Dispatch alert channels and return per-channel result.
+    Returns: {"sms": bool, "telegram": bool, "email": bool}
+    """
+    sms_ok   = send_sms(label, confidence, camera, use_cooldown=False)
+    tg_ok    = send_telegram(label, confidence, camera, image_path, use_cooldown=False)
+    email_ok = send_email(label, confidence, camera, image_path)
+    logger.info(
+        "Alert dispatched  sms=%s  telegram=%s  email=%s  label=%s",
+        sms_ok, tg_ok, email_ok, label
+    )
+    return {"sms": sms_ok, "telegram": tg_ok, "email": email_ok}

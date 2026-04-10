@@ -29,12 +29,82 @@ AWS_S3_BUCKET         = os.getenv("AWS_S3_BUCKET", "")
 DETECTION_CONFIDENCE_THRESHOLD = float(os.getenv("DETECTION_CONFIDENCE_THRESHOLD", 35.0))
 ALERT_CONFIDENCE_THRESHOLD     = float(os.getenv("ALERT_CONFIDENCE_THRESHOLD", 65.0))
 ALERT_COOLDOWN_SECONDS         = int(os.getenv("ALERT_COOLDOWN_SECONDS", 30))
+LOG_ALL_DETECTIONS             = os.getenv("LOG_ALL_DETECTIONS", "false").lower() == "true"
 
-# Labels that always trigger SMS/email alert
+# Labels that trigger alerts (normalized matching also supports underscore/space variants)
 HIGH_THREAT_LABELS = {
-    "person", "weapon", "gun", "knife", "pistol", "rifle",
-    "scissors", "fire", "smoke", "mask", "cell phone", "laptop",
-    "backpack", "car", "motorcycle", "truck",
+    "person",
+    "crowd",
+    "soldier",
+    "police",
+    "unauthorized_person",
+    "child",
+    "elderly",
+    "animal",
+    "car",
+    "motorcycle",
+    "bicycle",
+    "auto_rickshaw",
+    "bus",
+    "truck",
+    "van",
+    "ambulance",
+    "fire_engine",
+    "police_vehicle",
+    "military_vehicle",
+    "tractor",
+    "heavy_vehicle",
+    "bag",
+    "backpack",
+    "suitcase",
+    "box",
+    "parcel",
+    "container",
+    "plastic_cover",
+    "trolley_bag",
+    "gun",
+    "knife",
+    "explosive",
+    "ammunition",
+    "fireworks",
+    "chemical",
+    "gas_cylinder",
+    "mobile_phone",
+    "laptop",
+    "camera",
+    "cctv",
+    "drone",
+    "walkie_talkie",
+    "recording_device",
+    "flag",
+    "banner",
+    "poster",
+    "water_bottle",
+    "alcohol_bottle",
+    "food_item",
+    "whistle",
+    "air_horn",
+    "laser_pointer",
+    "traffic_signal",
+    "stop_sign",
+    "speed_breaker",
+    "road_barrier",
+    "cone",
+    "zebra_crossing",
+    "toll_gate",
+    "check_post",
+    "building",
+    "gate",
+    "fence",
+    "parking_area",
+    "watch_tower",
+    "security_checkpoint",
+    "abandoned_bag",
+    "loitering_person",
+    "unauthorized_vehicle",
+    "overspeeding_vehicle",
+    "wrong_direction",
+    "crowd_gathering",
 }
 
 # ─── Twilio SMS ────────────────────────────────────────────────
@@ -47,7 +117,7 @@ ADMIN_PHONE_NUMBER  = os.getenv("ADMIN_PHONE_NUMBER", "+91XXXXXXXXXX")
 
 # ─── Telegram Alerts ────────────────────────────────────────────
 TELEGRAM_BOT_TOKEN = os.getenv("TELEGRAM_BOT_TOKEN", "8779364517:AAENcju8Z5FKnYWLoiGIdbjkIrLZeoufSzs")
-TELEGRAM_CHAT_ID   = os.getenv("TELEGRAM_CHAT_ID", "-1002816061283")
+TELEGRAM_CHAT_ID   = os.getenv("TELEGRAM_CHAT_ID", "1599522405")
 
 # ─── Email / SMTP ──────────────────────────────────────────────
 EMAIL_ADDRESS  = os.getenv("EMAIL_ADDRESS", "")

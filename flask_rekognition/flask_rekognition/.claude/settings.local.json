@@ -1,7 +1,0 @@
-{
-  "permissions": {
-    "allow": [
-      "Bash(venv/Scripts/python.exe -m pip install flask flask-login flask-sqlalchemy flask-socketio boto3 twilio python-dotenv eventlet)"
-    ]
-  }
-}

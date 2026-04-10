@@ -1,223 +1,576 @@
-# EyeQ — Smart Surveillance System
-## Complete Project Documentation
+# EyeQ — Smart Vision Surveillance System
+
+Complete A-to-Z technical documentation for the current project state.
 
 ---
 
 ## Table of Contents
 
-1. [Project Overview](#1-project-overview)
-2. [Technology Stack](#2-technology-stack)
-3. [Project Structure](#3-project-structure)
-4. [How to Run the Project](#4-how-to-run-the-project)
-5. [Configuration & Environment Variables](#5-configuration--environment-variables)
-6. [Detection Engine — How It Works](#6-detection-engine--how-it-works)
-7. [Alert System — SMS & Email](#7-alert-system--sms--email)
-8. [All API Endpoints](#8-all-api-endpoints)
-9. [Database Models](#9-database-models)
-10. [Frontend — Pages & UI](#10-frontend--pages--ui)
-11. [Live Camera System — Deep Dive](#11-live-camera-system--deep-dive)
-12. [Real-Time Performance Architecture](#12-real-time-performance-architecture)
-13. [User Authentication & Roles](#13-user-authentication--roles)
-14. [Image Detection Page](#14-image-detection-page)
-15. [Content Moderation Page](#15-content-moderation-page)
-16. [Alerts Page](#16-alerts-page)
-17. [Data Flow — End to End](#17-data-flow--end-to-end)
-18. [Common Errors & Fixes](#18-common-errors--fixes)
+1. [Project Summary](#1-project-summary)  
+2. [Objectives](#2-objectives)  
+3. [Technology Stack](#3-technology-stack)  
+4. [System Architecture](#4-system-architecture)  
+5. [Current Project Structure](#5-current-project-structure)  
+6. [Core Modules](#6-core-modules)  
+7. [Detection Engine (AWS / YOLO / Demo)](#7-detection-engine-aws--yolo--demo)  
+8. [Alert Engine (SMS / Telegram / Email)](#8-alert-engine-sms--telegram--email)  
+9. [Authentication, Sessions, and Roles](#9-authentication-sessions-and-roles)  
+10. [Database Schema](#10-database-schema)  
+11. [Frontend and Real-Time UI Flow](#11-frontend-and-real-time-ui-flow)  
+12. [API Reference](#12-api-reference)  
+13. [Environment Variables](#13-environment-variables)  
+14. [Installation and Run Guide](#14-installation-and-run-guide)  
+15. [How to Test the Project](#15-how-to-test-the-project)  
+16. [Performance Notes and Tuning](#16-performance-notes-and-tuning)  
+17. [Known Limitations](#17-known-limitations)  
+18. [Troubleshooting Guide](#18-troubleshooting-guide)  
+19. [Security Guidance](#19-security-guidance)  
+20. [Future Enhancements](#20-future-enhancements)
 
 ---
 
-## 1. Project Overview
+## 1. Project Summary
 
-**EyeQ** is a real-time AI-powered surveillance and threat detection web application. It monitors live camera feeds (webcam, RTSP IP cameras, or local video files), detects objects and threats using AI, and automatically sends SMS and email alerts when a threat is found.
+EyeQ is a Flask-based intelligent surveillance platform that:
 
-### What It Does
+- accepts live camera input from webcam, RTSP streams, and local video,
+- performs object detection in near real-time,
+- stores detections and alert history,
+- dispatches notifications through SMS, Telegram, and Email,
+- provides dashboard analytics and alert history through a web UI.
 
-| Feature | Description |
-|---|---|
-| Live Detection | Analyzes camera feed in real time, draws bounding boxes around detected objects |
-| Threat Alerts | Sends SMS (via Twilio) and email (via Gmail) when a weapon, fire, person, etc. is detected |
-| Image Detection | Upload a photo — get a full list of what's in it |
-| Content Moderation | Detect unsafe/explicit content in images and videos |
-| Dashboard | Live charts showing detection counts, alert history, top detected objects |
-| Alerts History | Browsable log of every alert ever triggered, with confidence scores |
+The project follows a practical fallback strategy:
 
-### Who It Is For
-
-Security teams, homeowners, businesses, and students building surveillance systems who need real-time AI detection without writing ML code from scratch.
+1. Use AWS Rekognition when configured.  
+2. Otherwise use YOLO locally.  
+3. Otherwise run demo mode so UI still functions.
 
 ---
 
-## 2. Technology Stack
+## 2. Objectives
+
+- Build an end-to-end surveillance application, not just a detector script.
+- Provide immediate threat notification to operators.
+- Maintain detection history for auditing and analytics.
+- Support multiple camera sources with one unified interface.
+- Keep project usable in low-resource environments through fallback modes.
+
+---
+
+## 3. Technology Stack
 
 ### Backend
-| Library | Version | Purpose |
-|---|---|---|
-| Flask | 3.1.3 | Web framework — routes, templates, sessions |
-| Flask-Login | 0.6.3 | User authentication, session management |
-| Flask-SQLAlchemy | 3.1.1 | ORM — maps Python classes to database tables |
-| Werkzeug | ≥3.0.3 | Password hashing, request utilities |
-| python-dotenv | 1.0.1 | Load `.env` file into environment |
 
-### AI & Computer Vision
-| Library | Version | Purpose |
-|---|---|---|
-| boto3 | 1.34.120 | AWS SDK — connects to Rekognition cloud API |
-| ultralytics | ≥8.0.0 | YOLOv8 — local on-device object detection |
-| opencv-python-headless | ≥4.9.0 | Frame capture, resize, JPEG encode, RTSP streaming |
-| numpy | ≥2.0.0 | Array math for YOLO output processing |
-| Pillow | 10.3.0 | Image I/O for pytesseract OCR |
-| pytesseract | optional | OCR text detection (requires Tesseract binary) |
+- Python
+- Flask
+- Flask-Login
+- Flask-SQLAlchemy
+- python-dotenv
 
-### Alerts
-| Library | Purpose |
-|---|---|
-| twilio | Send SMS alerts to your phone |
-| smtplib (stdlib) | Send email alerts via Gmail SMTP |
+### Detection and Vision
 
-### Database
-| Option | Details |
-|---|---|
-| SQLite (default) | Zero-config, file-based — `instance/surveillance.db` |
-| PostgreSQL | Set `DATABASE_URL` in `.env` for production |
+- AWS Rekognition (`boto3`)
+- YOLO (Ultralytics)
+- OpenCV
+- NumPy
+- Pillow
+- Optional OCR via `pytesseract`
+
+### Notifications
+
+- Twilio SMS
+- Telegram Bot API (direct HTTP requests)
+- SMTP Email (`smtplib`)
 
 ### Frontend
-| Technology | Purpose |
-|---|---|
-| Bootstrap 5 | Responsive layout, dark theme |
-| Bootstrap Icons | Icon library (bi-camera, bi-bell, etc.) |
-| Chart.js | Line chart (detection activity) + doughnut (top objects) |
-| Vanilla JS | Camera capture, WebRTC, canvas bbox drawing, fetch API |
-| MJPEG streaming | Server-pushed RTSP stream as `<img>` element |
+
+- Jinja templates
+- Bootstrap 5
+- Vanilla JavaScript
+- Chart.js
+
+### Database
+
+- SQLite by default (`instance/surveillance.db`)
+- PostgreSQL possible through `DATABASE_URL`
 
 ---
 
-## 3. Project Structure
+## 4. System Architecture
 
+```text
+Camera Source (Webcam / RTSP / Local Video)
+            ↓
+Frame Capture + Compression (camera.js)
+            ↓
+POST /api/detect (Flask)
+            ↓
+Detection Service (Rekognition -> YOLO -> Demo)
+            ↓
+Threat Decision + Cooldown
+            ↓
+Store Event + Notification Dispatch
+            ↓
+Dashboard + Alerts History + Charts
 ```
-EYEQ/
-└── flask_rekognition/          ← Main application folder
-    ├── app.py                  ← Entry point — creates Flask app, registers blueprints
-    ├── config.py               ← All configuration (reads from .env)
-    ├── models.py               ← SQLAlchemy database models (User, AlertEvent, DetectionLog)
-    ├── requirements.txt        ← Python dependencies
-    │
-    ├── routes/                 ← URL handlers (blueprints)
-    │   ├── auth.py             ← /auth/login, /auth/register, /auth/logout
-    │   ├── dashboard.py        ← /dashboard, /api/stats
-    │   ├── camera.py           ← /api/detect, /api/rtsp/feed, /api/snapshot, /api/status
-    │   ├── alerts.py           ← /alerts, /api/alerts
-    │   ├── detection.py        ← /image-detection, /detect-image
-    │   └── moderation.py       ← /moderation, /moderate-image, /moderate-video
-    │
-    ├── services/               ← Business logic (no Flask dependency)
-    │   ├── rekognition_service.py  ← Detection engine (AWS → YOLO → Demo)
-    │   └── alert_service.py        ← SMS + Email dispatch with cooldown
-    │
-    ├── templates/              ← Jinja2 HTML templates
-    │   ├── base.html           ← Master layout (navbar, sidebar, CSS/JS imports)
-    │   ├── dashboard.html      ← Live camera + charts + recent alerts
-    │   ├── alerts.html         ← Paginated alerts table
-    │   ├── image_detection.html ← Upload image → detect
-    │   ├── moderation.html     ← Content moderation tool
-    │   └── login.html          ← Login page
-    │
+
+---
+
+## 5. Current Project Structure
+
+```text
+EyeQ-Smart-Vision-with-Intelligence/
+├── DOCUMENTATION.md
+├── config/
+│   └── settings.py
+└── flask_rekognition/
+    ├── app.py
+    ├── config.py
+    ├── models.py
+    ├── requirements.txt
+    ├── .env
+    ├── routes/
+    │   ├── auth.py
+    │   ├── dashboard.py
+    │   ├── camera.py
+    │   ├── alerts.py
+    │   ├── detection.py
+    │   └── moderation.py
+    ├── services/
+    │   ├── rekognition_service.py
+    │   └── alert_service.py
+    ├── templates/
+    │   ├── base.html
+    │   ├── login.html
+    │   ├── dashboard.html
+    │   ├── alerts.html
+    │   ├── image_detection.html
+    │   └── moderation.html
     ├── static/
-    │   ├── css/                ← Stylesheets
-    │   └── js/
-    │       ├── camera.js       ← Live detection UI logic (rAF loop + detection loop)
-    │       └── dashboard.js    ← Dashboard auto-refresh (Chart.js updates every 5s)
-    │
-    ├── snapshots/              ← Alert screenshots saved here (auto-created)
-    └── instance/
-        └── surveillance.db     ← SQLite database (auto-created on first run)
+    │   ├── css/style.css
+    │   ├── js/camera.js
+    │   ├── js/dashboard.js
+    │   └── img/eyeq-logo.png
+    ├── instance/
+    │   └── surveillance.db
+    └── snapshots/   (runtime generated)
 ```
 
 ---
 
-## 4. How to Run the Project
+## 6. Core Modules
 
-### Step 1 — Prerequisites
+### 6.1 `app.py`
 
-Make sure you have the following installed:
+- Creates Flask app.
+- Loads config from `config.py`.
+- Initializes DB and LoginManager.
+- Registers all blueprints.
+- Creates default admin if no user exists.
+- Provides `/favicon.ico`.
 
-- **Python 3.10 or higher** — check with `python --version`
-- **pip** — check with `pip --version`
-- A terminal / command prompt
+### 6.2 `routes/auth.py`
 
-### Step 2 — Navigate to the Project Folder
+- `/auth/login` (GET/POST)
+- `/auth/register` (GET/POST)
+- `/auth/logout`
+- `/auth/me` (session health endpoint)
 
-```bash
-cd "d:\manish\MAJOR PROJECT\EYEQ\flask_rekognition"
+### 6.3 `routes/camera.py`
+
+- `/api/detect` — real-time detection endpoint for live feed.
+- `/api/status` — backend mode/status for UI.
+- `/api/snapshot` — manual image save.
+- `/api/rtsp/feed` — MJPEG stream proxy.
+
+### 6.4 `routes/dashboard.py`
+
+- `/dashboard` page
+- `/api/stats` for summary cards, charts, recent alerts
+
+### 6.5 `routes/alerts.py`
+
+- `/alerts` page
+- `/api/alerts` listing with filters and pagination
+- `/api/alerts/<id>` details
+- `/api/alerts/summary` count for navbar badge
+- `/api/alerts/test-telegram` for test dispatch (admin protected)
+
+### 6.6 `routes/detection.py`
+
+- `/image-detection` page
+- `/detect-image` uploaded image analysis
+
+### 6.7 `routes/moderation.py`
+
+- Age verification flow
+- Image moderation using Rekognition moderation labels
+- Video moderation via frame sampling or optional S3-based flow
+
+### 6.8 `services/rekognition_service.py`
+
+- Unified detector with fallback.
+- Normalizes output format.
+- Threat label normalization and matching logic.
+
+### 6.9 `services/alert_service.py`
+
+- Per-label cooldown.
+- Sends SMS, Telegram, Email.
+- Returns channel delivery result map for downstream persistence/UI.
+
+---
+
+## 7. Detection Engine (AWS / YOLO / Demo)
+
+### Priority order
+
+1. Rekognition backend (if AWS credentials valid)  
+2. YOLO backend (if model installed)  
+3. Demo backend
+
+### Output contract
+
+Every backend returns list entries like:
+
+```json
+{
+  "label": "person",
+  "confidence": 87.5,
+  "detection_type": "label|yolo|face|text|moderation|demo",
+  "bounding_box": {"Left":0.1,"Top":0.2,"Width":0.3,"Height":0.4},
+  "color": "#hex",
+  "is_alert": true
+}
 ```
 
-### Step 3 — Create a Virtual Environment (Recommended)
+### Threat matching
 
-```bash
-# Create venv
-python -m venv venv
+- Label text is normalized (case/separator/punctuation).
+- Matching supports exact and partial compound matches.
+- `ALERT_CONFIDENCE_THRESHOLD` is required for alert trigger.
 
-# Activate on Windows
-venv\Scripts\activate
+---
 
-# Activate on Mac/Linux
-source venv/bin/activate
+## 8. Alert Engine (SMS / Telegram / Email)
+
+### Channel behavior
+
+- SMS via Twilio (`send_sms`)
+- Telegram via Bot API (`send_telegram`)
+- Email via SMTP (`send_email`)
+
+### Dispatch behavior
+
+`dispatch_alert(...)` returns:
+
+```python
+{"sms": bool, "telegram": bool, "email": bool}
 ```
 
-You will see `(venv)` at the start of your terminal prompt when activated.
+In camera flow, Telegram status is currently persisted into `AlertEvent.sms_sent` to drive the table tick/cross icon.
 
-### Step 4 — Install Dependencies
+### Cooldown
 
-```bash
-pip install -r requirements.txt
-```
+- Per-label cooldown is enforced with in-memory time map.
+- Prevents notification spam for repeated detections.
 
-This installs Flask, YOLOv8, OpenCV, boto3, Twilio, and all other libraries.
+---
 
-> **Note:** `ultralytics` (YOLOv8) is a large install (~500MB). The first time you run it, it also downloads the YOLOv8 nano model file automatically.
+## 9. Authentication, Sessions, and Roles
 
-### Step 5 — Create the `.env` File (Optional but Recommended)
+### User model
 
-Create a file named `.env` inside the `flask_rekognition/` folder:
+- `username`
+- `email`
+- `password_hash`
+- `role` (default currently set in model as `"admin"`, registration route assigns `"user"`)
+
+### Session
+
+- Permanent session enabled.
+- Remember cookie configured.
+- Session health checked from frontend via `/auth/me`.
+
+### Default account
+
+Created automatically on first startup if DB has no users:
+
+- Username: `admin`
+- Password: `Admin@1234`
+
+---
+
+## 10. Database Schema
+
+### `users`
+
+- `id` (PK)
+- `username` (unique)
+- `email` (unique nullable)
+- `password_hash`
+- `role`
+- `created_at`
+
+### `alert_events`
+
+- `id` (PK)
+- `object_detected`
+- `confidence_score`
+- `detection_type`
+- `camera_source`
+- `image_path`
+- `alert_sent`
+- `sms_sent` (used as notification status flag in UI)
+- `timestamp`
+
+### `detection_log`
+
+- `id` (PK)
+- `label`
+- `confidence`
+- `detection_type`
+- `bounding_box` (JSON string)
+- `camera_source`
+- `timestamp`
+
+---
+
+## 11. Frontend and Real-Time UI Flow
+
+### Live detection frontend (`static/js/camera.js`)
+
+- Render loop: `requestAnimationFrame` for smooth box drawing.
+- Detection loop: periodic POST to `/api/detect`.
+- Busy-flag to avoid overlapping requests.
+- Offscreen canvas compression before upload.
+
+Current fast settings:
+
+- `DETECT_INTERVAL = 250 ms`
+- `MAX_W = 480`
+- `QUALITY = 0.60`
+
+### Dashboard frontend (`static/js/dashboard.js`)
+
+- Polls `/api/stats` periodically.
+- Updates summary cards and Chart.js in-place.
+- Updates recent alerts table and notification badge.
+
+---
+
+## 12. API Reference
+
+### Auth
+
+- `GET/POST /auth/login`
+- `GET/POST /auth/register`
+- `GET /auth/logout`
+- `GET /auth/me`
+
+### Dashboard
+
+- `GET /dashboard`
+- `GET /api/stats`
+
+### Live camera
+
+- `POST /api/detect`
+- `GET /api/status`
+- `POST /api/snapshot`
+- `GET /api/rtsp/feed?url=...`
+
+### Alerts
+
+- `GET /alerts`
+- `GET /api/alerts?page=1&per_page=25&label=...&min_confidence=...`
+- `GET /api/alerts/<id>`
+- `DELETE /api/alerts/<id>` (admin)
+- `GET /api/alerts/summary`
+- `GET/POST /api/alerts/test-telegram` (admin)
+
+### Image detection
+
+- `GET /image-detection`
+- `POST /detect-image`
+
+### Moderation
+
+- `GET /moderation`
+- `POST /verify-age`
+- `POST /moderate-image`
+- `POST /moderate-video`
+
+---
+
+## 13. Environment Variables
+
+Create `flask_rekognition/.env`:
 
 ```env
-# Flask
-SECRET_KEY=your-secret-key-here
+# Core
+SECRET_KEY=change-this
 DEBUG=false
+DATABASE_URL=sqlite:///./surveillance.db
 
-# AWS Rekognition (optional — app falls back to YOLO if not set)
-AWS_ACCESS_KEY_ID=AKIAXXXXXXXXXXXXXXXX
-AWS_SECRET_ACCESS_KEY=your-secret-access-key
+# Detection tuning
+DETECTION_CONFIDENCE_THRESHOLD=35
+ALERT_CONFIDENCE_THRESHOLD=65
+ALERT_COOLDOWN_SECONDS=30
+LOG_ALL_DETECTIONS=false
+
+# AWS (optional)
+AWS_ACCESS_KEY_ID=
+AWS_SECRET_ACCESS_KEY=
 AWS_REGION=us-east-1
+AWS_S3_BUCKET=
 
-# Twilio SMS (optional)
-TWILIO_ACCOUNT_SID=ACxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
-TWILIO_AUTH_TOKEN=your_twilio_auth_token
-TWILIO_FROM_NUMBER=+1XXXXXXXXXX
-ADMIN_PHONE_NUMBER=+91XXXXXXXXXX
+# Twilio (optional)
+TWILIO_ACCOUNT_SID=
+TWILIO_AUTH_TOKEN=
+TWILIO_FROM_NUMBER=
+ADMIN_PHONE_NUMBER=
 
-# Email / SMTP (optional — use Gmail)
-EMAIL_ADDRESS=youremail@gmail.com
-EMAIL_PASSWORD=your-app-password
-ADMIN_EMAIL=youremail@gmail.com
+# Telegram (optional)
+TELEGRAM_BOT_TOKEN=
+TELEGRAM_CHAT_ID=
+
+# Email (optional)
+EMAIL_ADDRESS=
+EMAIL_PASSWORD=
 SMTP_HOST=smtp.gmail.com
 SMTP_PORT=587
+ADMIN_EMAIL=
+
+# YOLO model
+YOLO_MODEL_PATH=../detection/models/yolov8n.pt
 ```
 
-> If you skip this step, the app runs in **YOLO mode** (local AI, no cloud, no alerts).
+> Never commit real tokens/passwords.
 
-### Step 6 — Run the Application
+---
+
+## 14. Installation and Run Guide
 
 ```bash
+cd "d:\manish\MAJOR PROJECT\EyeQ-Smart-Vision-with-Intelligence\flask_rekognition"
+python -m venv venv
+venv\Scripts\activate
+pip install -r requirements.txt
 python app.py
 ```
 
-You will see output like:
+Open:
 
-```
-[INIT] Default admin created
-       Username : admin
-       Password : Admin@1234
+- `http://127.0.0.1:5000`
 
+---
+
+## 15. How to Test the Project
+
+### Basic functional test
+
+1. Login with admin.
+2. Start webcam in dashboard.
+3. Observe live boxes + stats update.
+4. Open alerts page and verify latest records.
+
+### Telegram test
+
+1. Set `TELEGRAM_BOT_TOKEN` and `TELEGRAM_CHAT_ID`.
+2. Restart app.
+3. Visit `/api/alerts/test-telegram` (admin logged in).
+4. Verify Telegram message delivery.
+
+### Role test
+
+1. Register new user.
+2. Login as that user.
+3. Verify available pages and data according to current role policy.
+
+---
+
+## 16. Performance Notes and Tuning
+
+### Current optimizations
+
+- Reduced live frame upload size/quality.
+- Adjustable detection interval.
+- Optional DB write reduction via `LOG_ALL_DETECTIONS=false`.
+- Threaded RTSP frame capture queue with frame dropping to limit lag.
+
+### If still slow
+
+- Lower detection width further.
+- Increase detection interval (e.g., 300–400 ms).
+- Disable OCR if not needed.
+- Use GPU-backed inference where possible.
+
+---
+
+## 17. Known Limitations
+
+- 100% detection accuracy is not technically guaranteed.
+- Model capability depends on available classes in chosen backend.
+- OCR requires Tesseract system binary for full text mode.
+- Local server setup is not production hardened by default.
+
+---
+
+## 18. Troubleshooting Guide
+
+### Telegram not sending
+
+- Ensure both token and chat id exist in `.env`.
+- Start bot conversation first.
+- Verify with `getUpdates`.
+- Restart app after `.env` edits.
+
+### Twilio not sending
+
+- Verify SID/token/from/to numbers.
+- Trial accounts require destination number verification.
+
+### No detections
+
+- Check `/api/status` mode.
+- Confirm camera access permissions.
+- Lower confidence thresholds.
+
+### Slow UI
+
+- Use lower camera resolution.
+- Increase detect interval.
+- Keep DB logging minimal.
+
+---
+
+## 19. Security Guidance
+
+- Rotate any token once exposed.
+- Keep `.env` out of source control.
+- Use HTTPS and secure cookies in production.
+- Replace default admin credentials immediately.
+- Add rate limiting and CSRF hardening for production deployment.
+
+---
+
+## 20. Future Enhancements
+
+- Fine-tuned custom detector for your full label set.
+- True role-based data scoping and permissions matrix.
+- Queue-based async notifications (Celery/RQ).
+- WebSocket updates instead of polling.
+- Dockerized deployment profile.
+- Multi-tenant camera/device management.
+
+---
+
+## Document Metadata
+
+- Last updated: 2026-04-10 15:48:16
+- Project: EyeQ Smart Vision with Intelligence
+- Main app path: `flask_rekognition/`
  * Running on http://0.0.0.0:5000
  * Debug mode: off
 ```

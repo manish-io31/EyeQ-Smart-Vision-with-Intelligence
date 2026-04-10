@@ -65,15 +65,17 @@ def detect():
         label      = det["label"]
         confidence = det["confidence"]
 
-        # Log every detection
-        log = DetectionLog(
-            label          = label,
-            confidence     = confidence,
-            detection_type = det.get("detection_type", "yolo"),
-            bounding_box   = json.dumps(det["bounding_box"]) if det.get("bounding_box") else None,
-            camera_source  = camera_source,
-        )
-        db.session.add(log)
+        # DB writes on every frame can throttle realtime throughput.
+        # Keep only alert rows by default; enable LOG_ALL_DETECTIONS=true to store all.
+        if config.LOG_ALL_DETECTIONS or det.get("is_alert"):
+            log = DetectionLog(
+                label          = label,
+                confidence     = confidence,
+                detection_type = det.get("detection_type", "yolo"),
+                bounding_box   = json.dumps(det["bounding_box"]) if det.get("bounding_box") else None,
+                camera_source  = camera_source,
+            )
+            db.session.add(log)
 
         # Alert on high-confidence threats — gated by per-label cooldown
         if det.get("is_alert") and confidence >= config.ALERT_CONFIDENCE_THRESHOLD:
@@ -93,17 +95,20 @@ def detect():
                     camera_source    = camera_source,
                     image_path       = snapshot_path,
                     alert_sent       = True,
-                    sms_sent         = bool(config.TWILIO_ACCOUNT_SID),
+                    # UI SMS column is used as "notification sent" indicator.
+                    # We store Telegram delivery result here for green tick / red cross.
+                    sms_sent         = False,
                 )
                 db.session.add(event)
 
-                # ★ Send SMS + email in background
-                dispatch_alert(
+                # Send notifications and persist Telegram success for dashboard icon.
+                ch = dispatch_alert(
                     label      = label,
                     confidence = confidence,
                     camera     = camera_source,
                     image_path = snapshot_path,
                 )
+                event.sms_sent = bool(ch.get("telegram", False))
 
     db.session.commit()
 

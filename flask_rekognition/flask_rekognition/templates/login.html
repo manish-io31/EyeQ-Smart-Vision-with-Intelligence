@@ -4,11 +4,13 @@
   <meta charset="UTF-8"/>
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>Sign In — EyeQ</title>
+  <link rel="icon" type="image/png" href="{{ url_for('static', filename='img/eyeq-logo.png') }}"/>
+  <link rel="apple-touch-icon" href="{{ url_for('static', filename='img/eyeq-logo.png') }}"/>
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet"/>
   <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css" rel="stylesheet"/>
   <link href="{{ url_for('static', filename='css/style.css') }}" rel="stylesheet"/>
 </head>
-<body style="display:flex;align-items:center;justify-content:center;min-height:100vh;overflow:hidden;">
+<body class="login-page" style="display:flex;align-items:center;justify-content:center;min-height:100vh;overflow:hidden;">
 
 <!-- Animated background -->
 <div class="login-bg">
@@ -19,14 +21,14 @@
 
 <!-- Dot grid overlay (inherited from body::before) -->
 
-<div style="width:420px;max-width:95vw;position:relative;z-index:1;">
+<div class="login-shell" style="width:420px;max-width:95vw;position:relative;z-index:1;">
   <div class="card login-card">
     <div class="card-body p-4 p-md-5">
 
       <!-- Brand -->
       <div class="text-center mb-4">
         <div class="login-logo mb-3">
-          <i class="bi bi-camera-video-fill"></i>
+          <img src="{{ url_for('static', filename='img/eyeq-logo.png') }}" alt="EyeQ" width="96" height="112" loading="eager"/>
         </div>
         <p class="login-title">EyeQ</p>
         <p style="font-size:.8rem;color:#475569;margin:4px 0 0;letter-spacing:.5px;">

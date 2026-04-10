@@ -3,7 +3,7 @@ Flask Surveillance System — Main Entry Point
 Run: python app.py
 """
 from datetime import timedelta
-from flask import Flask, redirect, url_for
+from flask import Flask, redirect, send_from_directory, url_for
 from flask_login import LoginManager
 from models import db, User
 import config
@@ -37,15 +37,27 @@ def create_app() -> Flask:
     from routes.dashboard import dashboard_bp
     from routes.camera    import camera_bp
     from routes.alerts    import alerts_bp
+    from routes.detection  import detection_bp
+    from routes.moderation import moderation_bp
 
     app.register_blueprint(auth_bp)
     app.register_blueprint(dashboard_bp)
     app.register_blueprint(camera_bp)
     app.register_blueprint(alerts_bp)
+    app.register_blueprint(detection_bp)
+    app.register_blueprint(moderation_bp)
 
     @app.route("/")
     def index():
         return redirect(url_for("dashboard.index"))
+
+    @app.route("/favicon.ico")
+    def favicon():
+        return send_from_directory(
+            app.static_folder,
+            "img/eyeq-logo.png",
+            mimetype="image/png",
+        )
 
     with app.app_context():
         db.create_all()
@@ -56,7 +68,7 @@ def create_app() -> Flask:
 
 @login_manager.user_loader
 def load_user(uid):
-    return User.query.get(int(uid))
+    return db.session.get(User, int(uid))
 
 
 def _create_default_admin():

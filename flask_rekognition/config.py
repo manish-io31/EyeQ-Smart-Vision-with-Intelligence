@@ -45,6 +45,10 @@ TWILIO_FROM_NUMBER  = os.getenv("TWILIO_FROM_NUMBER", "")
 # ★ DEFAULT PHONE — alerts always go here
 ADMIN_PHONE_NUMBER  = os.getenv("ADMIN_PHONE_NUMBER", "+91XXXXXXXXXX")
 
+# ─── Telegram Alerts ────────────────────────────────────────────
+TELEGRAM_BOT_TOKEN = os.getenv("TELEGRAM_BOT_TOKEN", "8779364517:AAENcju8Z5FKnYWLoiGIdbjkIrLZeoufSzs")
+TELEGRAM_CHAT_ID   = os.getenv("TELEGRAM_CHAT_ID", "-1002816061283")
+
 # ─── Email / SMTP ──────────────────────────────────────────────
 EMAIL_ADDRESS  = os.getenv("EMAIL_ADDRESS", "")
 EMAIL_PASSWORD = os.getenv("EMAIL_PASSWORD", "")

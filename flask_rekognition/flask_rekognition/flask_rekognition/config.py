@@ -20,6 +20,8 @@ DATABASE_URL = os.getenv("DATABASE_URL", "sqlite:///./surveillance.db")
 AWS_ACCESS_KEY_ID     = os.getenv("AWS_ACCESS_KEY_ID", "")
 AWS_SECRET_ACCESS_KEY = os.getenv("AWS_SECRET_ACCESS_KEY", "")
 AWS_REGION            = os.getenv("AWS_REGION", "us-east-1")
+# S3 bucket for video moderation (optional — frame-extraction used if empty)
+AWS_S3_BUCKET         = os.getenv("AWS_S3_BUCKET", "")
 
 # ─── Detection ─────────────────────────────────────────────────
 # Lower detection threshold catches small objects (phones, knives) with fewer false negatives.
@@ -42,6 +44,10 @@ TWILIO_FROM_NUMBER  = os.getenv("TWILIO_FROM_NUMBER", "")
 
 # ★ DEFAULT PHONE — alerts always go here
 ADMIN_PHONE_NUMBER  = os.getenv("ADMIN_PHONE_NUMBER", "+91XXXXXXXXXX")
+
+# ─── Telegram Alerts ────────────────────────────────────────────
+TELEGRAM_BOT_TOKEN = os.getenv("TELEGRAM_BOT_TOKEN", "")
+TELEGRAM_CHAT_ID   = os.getenv("TELEGRAM_CHAT_ID", "")
 
 # ─── Email / SMTP ──────────────────────────────────────────────
 EMAIL_ADDRESS  = os.getenv("EMAIL_ADDRESS", "")

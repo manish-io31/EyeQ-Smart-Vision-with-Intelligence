@@ -272,6 +272,7 @@ class _TesseractTextDetector:
     """
     def __init__(self):
         self.available = _PYTESS
+        self._warned_unavailable = False
         if self.available:
             logger.info("pytesseract OCR text detection available")
         else:
@@ -309,6 +310,16 @@ class _TesseractTextDetector:
                 })
             return out
         except Exception as e:
+            msg = str(e).lower()
+            if "not in your path" in msg or "tesseract is not installed" in msg:
+                if not self._warned_unavailable:
+                    logger.warning(
+                        "pytesseract present but Tesseract binary missing; "
+                        "OCR text detection disabled"
+                    )
+                    self._warned_unavailable = True
+                self.available = False
+                return []
             logger.warning("pytesseract OCR failed: %s", e)
             return []
 

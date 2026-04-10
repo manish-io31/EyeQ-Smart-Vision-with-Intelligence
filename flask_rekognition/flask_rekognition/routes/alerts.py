@@ -3,6 +3,7 @@
 from flask import Blueprint, render_template, jsonify, request, abort
 from flask_login import login_required, current_user
 from models import db, AlertEvent
+from services.alert_service import send_telegram
 
 alerts_bp = Blueprint("alerts", __name__)
 
@@ -63,3 +64,32 @@ def summary():
     count = AlertEvent.query.filter(
         AlertEvent.timestamp >= now - timedelta(minutes=5)).count()
     return jsonify({"new_alerts": count})
+
+
+@alerts_bp.route("/api/alerts/test-telegram", methods=["GET", "POST"])
+@login_required
+def test_telegram():
+    if not current_user.is_admin():
+        abort(403)
+
+    label = request.values.get("label", "test_alert", type=str)
+    confidence = request.values.get("confidence", 99.0, type=float)
+    camera = request.values.get("camera", "manual_test", type=str)
+    image_path = request.values.get("image_path", default=None, type=str)
+    if image_path == "":
+        image_path = None
+
+    ok = send_telegram(
+        label=label,
+        confidence=confidence,
+        camera=camera,
+        image_path=image_path,
+        use_cooldown=False,
+    )
+    return jsonify({
+        "ok": ok,
+        "channel": "telegram",
+        "label": label,
+        "confidence": confidence,
+        "camera": camera,
+    }), (200 if ok else 500)

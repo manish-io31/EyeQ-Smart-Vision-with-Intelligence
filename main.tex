@@ -1,0 +1,1463 @@
+\documentclass[10pt,openany]{report}
+\usepackage[utf8]{inputenc}
+\usepackage{blindtext}
+\usepackage{times}
+\usepackage{graphicx}
+\usepackage{float}
+\usepackage{array}
+% biblatex conflicts with thebibliography; enable only if using \addbibresource + \printbibliography
+% \usepackage[backend=biber,bibencoding=latin1]{biblatex}
+\usepackage{enumitem}
+\usepackage{enumerate}
+\usepackage{listings}
+\usepackage{color}
+\usepackage{ragged2e}
+\usepackage{pdfpages} 
+\usepackage{draftwatermark}
+\usepackage{caption}    % Ensures captions render properly
+\usepackage{xcolor}     % \textcolor (extends color)
+\emergencystretch=2em
+\graphicspath{{./}{./images/}{./flask_rekognition/assets/}{./flask_rekognition/static/img/}}
+
+\usepackage[headheight=0pt,headsep=0pt]{geometry}
+\definecolor{dkgreen}{rgb}{0,0.6,0}
+\definecolor{gray}{rgb}{0.5,0.5,0.5}
+\definecolor{mauve}{rgb}{0.58,0,0.82}
+
+\makeatletter
+\def\@makechapterhead#1{%
+  %%%%\vspace*{50\p@}% %%% removed!
+  {\parindent \z@ \centering\normalfont
+    \ifnum \c@secnumdepth >\m@ne
+        \huge\bfseries \@chapapp\space \thechapter
+        \par\nobreak
+        \vskip 20\p@
+    \fi
+    \interlinepenalty\@M
+    \Huge \bfseries #1\par\nobreak
+    \vskip 40\p@
+  }}
+\def\@makeschapterhead#1{%
+  %%%%%\vspace*{50\p@}% %%% removed!
+  {\parindent \z@ \centering
+    \normalfont
+    \interlinepenalty\@M
+    \Huge \bfseries  #1\par\nobreak
+    \vskip 40\p@
+  }}
+\makeatother
+
+\lstset{ %
+ language=Java, % the language of the code
+ basicstyle=\footnotesize, % the size of the fonts that are used for the code
+ numbers=left, % where to put the line-numbers
+ numberstyle=\tiny\color{gray}, % the style that is used for the line-numbers
+ stepnumber=1, % each line is numbered
+ numbersep=5pt, % how far the line-numbers are from the code
+ backgroundcolor=\color{white}, % choose the background color. You must add \usepackage{color}
+ showspaces=false, % show spaces adding particular underscores
+ showstringspaces=false, % underline spaces within strings
+ showtabs=false, % show tabs within strings adding particular underscores
+ frame=single, % adds a frame around the code
+ rulecolor=\color{black}, % if not set, the frame-color may be changed on line-breaks within notblack text (e.g. commens (green here))
+ tabsize=2, % sets default tabsize to 2 spaces
+ captionpos=b, % sets the caption-position to bottom
+ breaklines=true, % sets automatic line breaking
+ breakatwhitespace=false, % sets if automatic breaks should only happen at whitespace
+ title=\lstname, % show the filename of files included with \lstinputlisting;
+ % also try caption instead of title
+ keywordstyle=\color{blue}, % keyword style
+ commentstyle=\color{dkgreen}, % comment style
+ stringstyle=\color{mauve}, % string literal style
+ escapeinside={\%*}{*)}, % if you want to add a comment within your code
+ literate={→}{{$\rightarrow$}}1,
+ morekeywords={*,...} % if you want to add more keywords to the set
+}
+\geometry{a4paper,left=20mm,right=20mm,top=20mm,bottom=20mm}
+
+\begin{document}
+% Avoid extra intentionally-blank verso pages before \chapter (twoside / openright setups)
+\let\cleardoublepage\clearpage
+\raggedbottom
+\thispagestyle{empty}
+\newpage
+\begin{center}
+\hspace{10cm}
+\LARGE{\textsc {\textbf{\textcolor{blue}{Batch No:203}}}}\\[0.2cm]
+\thispagestyle{empty}
+
+\LARGE{\textsc {\textbf{\textcolor{blue}{EYEQ – SMART VISION WITH INTELLIGENCE}}}}\\[0.2cm]
+\vspace{0.2cm}
+\Large{\textit{\textcolor{blue}{\\Major project report submitted \\in partial fulfillment of the
+requirement
+for award of the degree of}}}\\[0.3cm]
+\Large{\textbf{\textcolor{blue}{\\Bachelor of Technology\\in \\Computer Science \& Engineering}}}
+\vspace{0.5cm}
+\Large{\textbf{\textcolor{blue}{\\By}}}\\[0.5cm]
+\begin{table}[h]
+\centering
+\Large{\textcolor{blue}{
+\begin{tabular}{>{\bfseries}lc>{\bfseries}r}
+Manish Kumar S &(22UEID0069) & (21406)\\Hari Krishnan M  & (22UEID0046)&(21434)
+\end{tabular}}}
+\end{table}
+\vspace{0.5cm}
+\large{\textit{\textcolor{blue}{Under the guidance of}}}\\
+\large{\textit{\textcolor{blue}{Dr. P.Arivubrakan,M.E. Ph. D.,\\
+ASSISTANT PROFESSOR SENIOR GRADE}
+}}\\
+\vspace{0.5cm}
+\includegraphics[scale=0.5]{eyeq-logo.png}\\
+\vspace{1cm}
+\large{\textbf{\textcolor{blue}{DEPARTMENT OF COMPUTER SCIENCE AND ENGINEERING}}}\\
+
+\large{\textbf{\textcolor{blue}{SCHOOL OF COMPUTING}}}\\
+\vspace{0.5cm}
+\Large{\textbf{\textcolor{blue}{VEL TECH RANGARAJAN DR. SAGUNTHALA R\&D INSTITUTE OF
+SCIENCE AND TECHNOLOGY\\
+\vspace{0.2cm}
+(Deemed to be University Estd u/s 3 of UGC Act,
+1956)}}}\\\Large{\textbf{\textcolor{blue}{Accredited by NAAC with A++ Grade}}}\\
+\large{\textbf{\textcolor{blue}{CHENNAI 600 062, TAMILNADU, INDIA}}}
+\vspace{0.4cm}
+\large{\textbf{\textcolor{blue}{\\April 2026}}}\\
+\end{center}
+
+\newpage
+\begin{center}
+\hspace{10cm}
+\LARGE{\textsc {\textbf{\textcolor{blue}{Batch No:203}}}}\\[0.2cm]
+\thispagestyle{empty}
+
+\LARGE{\textsc {\textbf{\textcolor{blue}{EYEQ – SMART VISION WITH INTELLIGENCE}}}}\\[0.2cm]
+\vspace{0.2cm}
+\Large{\textit{\textcolor{blue}{\\Major project report submitted \\in partial fulfillment of the
+requirement
+for award of the degree of}}}\\[0.3cm]
+\Large{\textbf{\textcolor{blue}{\\Bachelor of Technology\\in \\Computer Science \& Engineering}}}
+\vspace{0.5cm}
+\Large{\textbf{\textcolor{blue}{\\By}}}\\[0.5cm]
+\begin{table}[h]
+\centering
+\Large{\textcolor{blue}{
+\begin{tabular}{>{\bfseries}lc>{\bfseries}r}
+Manish Kumar S &(22UEID0069) & (21406)\\Hari Krishnan M  & (22UEID0046)&(21434)
+\end{tabular}}}
+\end{table}
+\vspace{0.5cm}
+\large{\textit{\textcolor{blue}{Under the guidance of}}}\\
+\large{\textit{\textcolor{blue}{Dr. P.Arivubrakan,M.E. Ph. D.,\\
+ASSISTANT PROFESSOR SENIOR GRADE}
+}}\\
+\vspace{0.5cm}
+\includegraphics[scale=0.5]{eyeq-logo.png}\\
+\vspace{1cm}
+\large{\textbf{\textcolor{blue}{DEPARTMENT OF COMPUTER SCIENCE AND ENGINEERING}}}\\
+
+\large{\textbf{\textcolor{blue}{SCHOOL OF COMPUTING}}}\\
+\vspace{0.5cm}
+\Large{\textbf{\textcolor{blue}{VEL TECH RANGARAJAN DR. SAGUNTHALA R\&D INSTITUTE OF
+SCIENCE AND TECHNOLOGY\\
+\vspace{0.2cm}
+(Deemed to be University Estd u/s 3 of UGC Act,
+1956)}}}\\\Large{\textbf{\textcolor{blue}{Accredited by NAAC with A++ Grade}}}\\
+\large{\textbf{\textcolor{blue}{CHENNAI 600 062, TAMILNADU, INDIA}}}
+\vspace{0.4cm}
+\large{\textbf{\textcolor{blue}{\\April 2026}}}\\
+\end{center}
+
+%CERTIFICATE
+\newgeometry{left=20mm,top=20mm, right=20mm} 
+\begin{center}
+{\Huge \textbf{CERTIFICATE}}\\[1cm]
+\end{center}
+\linespread{1.5}
+\large{It is certified that the work contained in the project report titled EYEQ – SMART VISION WITH INTELLIGENCE  by MANISH KUMAR S (22UEID0069), HARI KRISHNAN M (22UEID0046) has been carried out under my supervision and that this work has not
+been submitted elsewhere for a degree.}
+\vspace{1.5cm}
+\begin{flushright}
+\textbf{Signature of Supervisor}\\[0.25cm]
+\textbf{Dr P Arivubrakan}\\[0.15cm]
+\textbf{Assistant Professor Senior Grade}\\[0.15cm]
+\textbf{Computer Science \& Engineering}\\[0.15cm]
+\textbf{School of Computing}\\[0.15cm]
+\textbf{Vel Tech Rangarajan Dr. Sagunthala R\&D}\\[0.15cm]
+\textbf{Institute of Science and Technology}\\[2.0cm]
+\end{flushright}
+\begin{flushleft}
+\textbf{Signature of Head / Assistant Head of the Department}\hfill\textbf{Signature of the Dean}\\[0.5cm]
+Dr. M. Kavitha / Dr. T. Kujani\hfill Dr. S P. Chokkalingam\\
+Professor \& Head / Associate Professor \& Assistant Head\hfill Professor \& Dean\\
+Computer Science \& Engineering\hfill School of Computing\\
+School of Computing\hfill Vel Tech Rangarajan Dr. Sagunthala R\&D\\
+Vel Tech Rangarajan Dr. Sagunthala R\&D\hfill Institute of Science and Technology\\
+Institute of Science and Technology
+\end{flushleft}
+
+
+%declaration
+\newpage
+\begin{center}
+\Huge \textbf{DECLARATION}
+\end{center}
+\vspace{1.0cm}
+\linespread{1.5}
+\large{
+We declare that this written submission represents our ideas in our own words and where others' ideas
+or words have been included, we have adequately cited and referenced the original sources. We also
+declare that we have adhered to all principles of academic honesty and integrity and have not
+misrepresented or fabricated or falsified any idea/data/fact/source in our submission. We understand
+that any violation of the above will be cause for disciplinary action by the Institute and can also evoke
+penal action from the sources which have thus not been properly cited or from whom proper permission
+has not been taken when needed.}
+\vspace{2.0cm}
+\begin{flushright}
+(Signature)\\
+\large{MANISH KUMAR S}\\
+\large{Date:\hspace*{1.0cm}/\hspace*{1.0cm}/}\\[2.0cm]
+(Signature)\\
+\large{HARI KRISHNAN M}\\
+\large{Date:\hspace*{1.0cm}/\hspace*{1.0cm}/}\\[2.0cm]
+
+\end{flushright}
+\newpage
+%approval sheet
+\newpage
+\begin{center}
+\Huge\textbf{APPROVAL SHEET}\\
+\vspace{1.0cm}
+\end{center}
+\linespread{1.5}
+\justifying{
+\large{This project report entitled EYEQ – SMART VISION WITH INTELLIGENCE by MANISH KUMAR S 
+(22UEID0069), HARI KRISHNAN M (22UEID0046), is approved for the
+degree of B.Tech in Computer Science \& Engineering.}\\}
+\vspace{4.0cm}
+\begin{flushleft}
+\Large \textbf{Examiners} \hfill \Large \textbf{Supervisor}\\
+\end{flushleft}
+\begin{flushright}
+Dr P Arivubrakan,M.E. Ph. D \\
+Assistant Professor Senior Grade
+\end{flushright}
+\vspace{1.0cm}
+\begin{flushleft}
+\large{\textbf{Date:\hspace*{1.0cm}/\hspace*{2.0cm}/}}\\
+\large{\textbf{Place:}}
+\end{flushleft}
+%acknowledgment
+\newpage
+\begin{center}
+\LARGE{\textbf{ACKNOWLEDGEMENT}}\\[1cm]
+\end{center}
+\linespread{1.13}
+\begin{sloppypar}
+
+\large{\paragraph{}We express our deepest gratitude to our \textbf{Honorable Founder Chancellor and President
+Col. Prof. Dr. R. RANGARAJAN B.E. (Electrical), B.E. (Mechanical), M.S
+(Automobile), D.Sc., and Foundress President Dr. R. SAGUNTHALA RANGARAJAN
+M.B.B.S. Vel Tech Rangarajan Dr. Sagunthala
+R\&D Institute of Science and Technology,} for their blessings.
+\large{\paragraph{}We express our sincere thanks to our respected Chairperson and Managing Trustee \textbf{Dr.(Mrs).
+RANGARAJAN MAHALAKSHMI KISHORE, B.E., M.B.A. Vel Tech Rangarajan Dr. Sagunthala
+R\&D Institute of Science and Technology,} for her blessings. 
+
+\large{\paragraph{}We are very much grateful to our beloved \textbf{Vice Chancellor Prof. Dr.RAJAT
+GUPTA , M.Tech., Ph.D.,} for providing us with an environment to complete our project successfully.}
+\large{\paragraph{}We record indebtedness to our \textbf{Professor \& Dean, School of Computing, Dr.SP.CHOKKALINGAM, M.Tech., Ph.D., Professor \& Associate Dean,  Dr.V.DHILIP KUMAR, M.E., Ph.D., Professor \& Assistant Dean, Dr. R. PARTHASARATHY, M.E., Ph.D., }  for their immense care and encouragement
+towards us throughout the course of this project.}
+
+\large{\paragraph{}We are thankful to our \textbf{Professor \& Head, Department of Computer Science and Engineering, Dr. M. KAVITHA, M.E., Ph.D., }and \textbf{Associate Professor \& Assistant Head, Dr. T. KUJANI, M.E., Ph.D.,} for providing immense support in all our endeavors.
+\large{\paragraph{}We also take this opportunity to express a deep sense of gratitude to our \textbf{Assistant Professor Senior Grade, Dr P ARIVUBRAKAN, M.E., Ph. D.,} for her cordial support, valuable
+information and guidance, she helped us in completing this project through various stages. }
+\large{\paragraph{}A special thanks to our \textbf{Project Coordinators Dr. SADISH SENDIL MURUGARAJ, M.E., Ph.D., Professor, Dr. S. RAJA PRAKASH, M.E., Ph.D.,} for their valuable guidance and support throughout the course of the project.}
+
+\large{\paragraph{}We thank our department faculty, supporting staff and friends for their support and
+guidance to complete this project.}
+\begin{sloppypar}
+
+\vspace{2.0cm}
+\begin{flushright}
+\begin{tabular}{>{\bfseries}lc>{\bfseries}r}
+MANISH KUMAR S  (22UEID0069)\\HARI KRISHNAN M (22UEID0046)\\
+\end{tabular}
+\end{flushright}
+%ABSTRACT
+\newpage
+\begin{center}
+\vspace{2cm}
+\Large{\textbf{ABSTRACT}}\\[0.5cm]
+\end{center}
+\begin{center}
+\addtocontents{toc}{~\hfill\textbf{Page.No}\par}
+\addcontentsline{toc}{chapter}{ABSTRACT}
+\addtocontents{toc}{\protect\thispagestyle{empty}}
+\end{center}
+\vspace{-5em}
+\Large{\paragraph\\
+Surveillance systems increasingly require timely interpretation of video streams rather than passive recording alone. This project presents EyeQ -- Smart Vision with Intelligence, a web-based intelligent surveillance platform that performs near real-time object detection on live camera input and provides operator awareness through a centralized dashboard and alert history. The system captures video from common sources such as webcams and RTSP streams, transmits compressed frames to a Python Flask backend, and applies a hierarchical detection strategy: AWS Rekognition when cloud credentials are available, otherwise YOLO (Ultralytics) for local inference, with a demo mode to preserve usability during setup or partial failures. Detections are normalized into a unified representation with labels, confidence scores, and bounding boxes for consistent visualization.
+EyeQ integrates policy-driven alerting using configurable confidence thresholds and threat-label matching, together with per-label cooldown to reduce notification spam. Notifications can be dispatched through SMS (Twilio), Telegram, and email (SMTP), while events are persisted in a relational database (SQLite by default, with PostgreSQL as an optional deployment choice) for auditing and analytics. A web dashboard summarizes detection and alert activity using charts and recent event listings. The proposed solution demonstrates a practical end-to-end workflow from frame acquisition to automated alerting, suitable for institutional monitoring scenarios subject to responsible deployment and governance.
+}\\
+\\
+\noindent\textbf{Keywords:} Intelligent Surveillance, Computer Vision, Real-Time Detection, Flask, AWS Rekognition, YOLO, Alerting, Web Dashboard
+
+\textbf{}
+%list of figure
+\newpage
+\renewcommand*\listfigurename{LIST OF FIGURES}
+\addcontentsline{toc}{chapter}{LIST OF FIGURES}
+\listoffigures
+\newpage
+\renewcommand{\listtablename}{LIST OF TABLES}
+\addcontentsline{toc}{chapter}{LIST OF TABLES}
+\listoftables
+% LIST OF ACRONYMS AND ABBREVIATIONS
+% LIST OF ACRONYMS AND ABBREVIATIONS (Important Only)
+\newpage
+\newlist{abbrv}{itemize}{1}
+\setlist[abbrv,1]{label=,labelwidth=1.6in,align=parleft,itemsep=0.15\baselineskip,leftmargin=!}
+\chapter*{LIST OF ACRONYMS AND ABBREVIATIONS}
+\chaptermark{LIST OF ACRONYMS AND ABBREVIATIONS}
+\addcontentsline{toc}{chapter}{LIST OF ACRONYMS AND ABBREVIATIONS}
+
+\begin{abbrv}
+\item[AI] Artificial Intelligence
+\item[API] Application Programming Interface
+\item[AWS] Amazon Web Services
+\item[CCTV] Closed-Circuit Television
+\item[CV] Computer Vision
+\item[DB] Database
+\item[FPS] Frames Per Second
+\item[HTTPS] Hypertext Transfer Protocol Secure
+\item[JSON] JavaScript Object Notation
+\item[ML] Machine Learning
+\item[OCR] Optical Character Recognition
+\item[ORM] Object-Relational Mapping
+\item[REST] Representational State Transfer
+\item[RTSP] Real Time Streaming Protocol
+\item[SDG] Sustainable Development Goals
+\item[SMS] Short Message Service
+\item[SMTP] Simple Mail Transfer Protocol
+\item[SQL] Structured Query Language
+\item[UI] User Interface
+\item[UML] Unified Modeling Language
+\item[URL] Uniform Resource Locator
+\item[YOLO] You Only Look Once
+\end{abbrv}
+\newpage
+\renewcommand*\contentsname{TABLE OF CONTENTS}
+%\addtocontents{toc}{\textbf{CONTENT} \hfill \textbf{PAGE NO.}}
+\tableofcontents
+\addtocontents{toc}{\protect\pagestyle{empty}}
+\thispagestyle{empty}
+%introduction
+\newpage
+\chapter{INTRODUCTION}
+\pagenumbering{arabic}
+\section{Introduction}
+\hspace{0.5cm}
+In recent years, video surveillance has become a routine safeguard in campuses, workplaces, and public facilities. Conventional deployments often depend on continuous human monitoring of multiple camera feeds, which is cognitively demanding and difficult to sustain over long shifts. Even when recordings are available for later review, the process is reactive: incidents may be noticed only after damage or loss has occurred. These limitations motivate the integration of intelligent components that can interpret visual data quickly and highlight important events to operators.
+
+Advances in Artificial Intelligence (AI) and Computer Vision (CV) have made it practical to assist human security workflows through automated perception. Modern detectors can localize objects in images and video frames with strong speed--accuracy trade-offs, enabling near real-time feedback in interactive applications. At the same time, web technologies allow such capabilities to be delivered through browser-based dashboards, improving accessibility for administrators and reducing the need for specialized workstation software for routine monitoring tasks.
+
+This project presents EyeQ -- Smart Vision with Intelligence, an end-to-end intelligent surveillance platform designed to monitor live visual input and support timely situational awareness. EyeQ captures frames from common sources such as webcams and RTSP streams, transmits them to a Python Flask backend, and performs detection using a practical fallback strategy: AWS Rekognition when cloud credentials are configured, otherwise YOLO inference locally, and finally a controlled demo mode to preserve system usability during setup or partial failures. Detected events can be recorded for auditing, while alert-worthy findings can trigger notifications through SMS (Twilio), Telegram, and email, subject to configurable thresholds and cooldown rules to reduce redundant alerts.
+
+The system also provides a web dashboard with summary statistics and recent activity, enabling operators to review trends without manually scanning raw footage. Overall, EyeQ aims to reduce dependence on uninterrupted manual screening, improve traceability through structured logs, and accelerate response by combining automated detection with multi-channel alerting in a unified architecture.
+
+\linespread{1.5}
+\section{Background}
+\hspace{0.4cm}
+Traditional CCTV systems primarily record footage for post-incident investigation. While recording is necessary, it does not automatically translate into timely prevention or rapid response. Security teams must either watch screens continuously or spend significant time searching archives, which becomes impractical as camera counts and retention durations increase.
+
+Recent progress in machine learning has enabled robust object detection in unconstrained scenes. Methods such as YOLO (You Only Look Once) support fast inference suitable for interactive applications, while cloud vision APIs can reduce local compute requirements when network connectivity and operational policies permit their use. Integrating such technologies with a structured software workflow---authentication, APIs, persistence, and alerting---moves surveillance from passive capture toward assisted monitoring. EyeQ follows this direction by combining detection backends with a web application layer that is suitable for institutional demonstration and iterative improvement.
+\section{Objective}
+The primary objective of this project is to design and implement EyeQ -- Smart Vision with Intelligence, a web-based intelligent surveillance system that processes live video input and presents detection outcomes through a unified operator interface. The system targets reliable end-to-end execution: authenticated access, frame ingestion from webcams and RTSP sources, detection and visualization with bounding boxes, persistence of detection/alert records, and configurable notification delivery. A further objective is to maintain operational flexibility through a hierarchical detection pipeline that can leverage cloud inference when available and local inference when required, rather than forcing a single deployment assumption.
+
+A secondary objective is to improve practical security operations through timeliness and traceability. Timeliness is addressed by near real-time detection loops and alert channels that can inform responsible stakeholders quickly when configured threat conditions occur. Traceability is addressed by storing structured event history in a database (SQLite by default, with PostgreSQL supported for scalable deployments) and by providing dashboard analytics for summarized monitoring. The project also emphasizes engineering completeness---modular routes/services, environment-based configuration, and safeguards such as confidence thresholds and per-label cooldown---so the solution remains maintainable and extensible for future enhancements such as stricter role policies, asynchronous notification queues, or deployment hardening for production environments.
+
+\section{Problem Statement}
+Conventional monitoring workflows are limited by human scalability. As the number of cameras grows, continuous manual observation becomes expensive, inconsistent, and prone to missed events during fatigue or distraction. Recording-only systems add storage and retrieval burden: finding a specific incident may require lengthy manual review unless meaningful metadata (object classes, timestamps, confidence, alert flags) is generated automatically at capture time. In addition, many ad-hoc scripts or standalone detection demos lack integrated user management, persistent history, and practical alerting---which reduces their usefulness as deployable surveillance tools.
+
+EyeQ addresses these gaps by providing an integrated platform that combines computer vision with a full application stack. The system reduces exclusive reliance on continuous human watching by automatically highlighting detections and generating alert events when policy conditions are satisfied. It also reduces reactive archive search by maintaining structured logs and dashboard summaries for operational review. Practically, the work must balance competing constraints---accuracy versus false alarms, latency versus model complexity, cloud dependence versus local compute---through configurable thresholds and backend selection. The intended outcome is not to replace human judgment, but to assist operators with faster awareness, better documentation of events, and scalable monitoring suitable for institutional environments, implemented with responsible use and access control considerations.
+
+%literature review
+\newpage
+\chapter{LITERATURE REVIEW}
+
+\section*{Overview}
+The field has transitioned from classical computer vision pipelines---such as background subtraction, frame differencing, optical-flow cues, and Haar-cascade detectors---to learning-based representations that generalize better under clutter, illumination change, and viewpoint variation. While classical methods remain lightweight and interpretable, they frequently degrade in unconstrained scenes due to dynamic backgrounds, shadows, and repetitive textures. Consequently, research momentum shifted toward deep learning, where convolutional architectures learn hierarchical features directly from data.
+
+At the same time, deployment constraints created two dominant directions: (i) edge/local inference using fast detectors (e.g., YOLO-family models) to minimize latency and recurring cloud cost, and (ii) managed cloud vision APIs (e.g., AWS Rekognition) that reduce local hardware requirements and simplify scaling, at the expense of network dependency, latency variability, and operational cost. Practical surveillance systems therefore increasingly combine algorithm selection, thresholding/policy design, and application integration (authentication, storage, dashboards, alerting), rather than focusing on detection accuracy alone.
+
+\section{Existing System}
+\textbf{Manual verification and operational limits.} Many legacy deployments rely on continuous human monitoring. This approach does not scale with camera count or retention duration: operator fatigue increases missed events, and incident discovery may occur only after a complaint or audit request. Even when video is recorded, reviewing archives without structured metadata remains slow and labor-intensive.
+
+\textbf{Scalability and data growth.} As resolution, frame rate, and camera deployments increase, raw video volume grows super-linearly relative to staffing. Organizations therefore need automated indexing signals (labels, timestamps, confidence, camera id) to narrow searches and prioritize review.
+
+\textbf{Classical automated methods.} Early automated assistance commonly used motion detection and background modeling. These methods can work in controlled scenes but often produce frequent false positives outdoors (wind, rain, lighting flicker). Haar-like cascades and hand-crafted features improved specific tasks (e.g., frontal face detection) but were brittle across pose, occlusion, and distance.
+
+\textbf{Performance and environment mismatch.} Traditional pipelines may perform well in laboratory setups yet fail in crowded, occluded, or low-light environments. Moreover, detection is only one component: without integrated workflows (roles, audit logs, alert policies), technical accuracy does not translate into dependable operations.
+
+\section{Related Work}
+\textbf{Deep learning for detection and understanding.} Convolutional neural networks became the standard backbone for object detection and recognition. Single-stage detectors such as YOLO and SSD emphasize speed--accuracy trade-offs suitable for near real-time use, while two-stage detectors often prioritize accuracy at higher compute cost. These advances enabled robust object localization in diverse scenes, supporting surveillance analytics beyond simple motion triggers.
+
+\textbf{Human-centric and behavioral cues.} Beyond object boxes, research explored face detection/attributes, pose estimation, and activity cues. Such cues can improve situational interpretation, though they also raise privacy and governance considerations in deployment.
+
+\textbf{Cloud vision services and managed APIs.} Cloud platforms provide pretrained models and standardized interfaces that reduce engineering time for teams without large ML infrastructure. For example, AWS Rekognition supports label/scene cues, face analysis, text detection, and moderation signals depending on configuration. These services are attractive for rapid prototyping and elastic workloads, while local models remain relevant for offline operation, predictable latency, or cost control.
+
+\textbf{Empirical studies (verify citations before use).} Replace this paragraph with papers you actually accessed. Example placeholder pattern:
+\begin{itemize}
+  \item Cloud-based AI studies reporting gains for specific surveillance tasks (motion/presence analytics, recognition pipelines) under stated assumptions.
+  \item Rekognition-oriented evaluations in varied environments (lighting, distance, crowd density), emphasizing metric definitions and dataset conditions.
+  \item Emotion/face-attribute studies on cloud ecosystems (ensure ethical framing; may be optional for your scope).
+\end{itemize}
+
+\textbf{Integration trend.} Recent practical systems increasingly emphasize end-to-end software engineering: APIs, databases, dashboards, and notification channels---because detection modules alone do not complete an operational surveillance workflow.
+
+\section{Research Gap}
+Despite progress, several gaps remain relevant to integrated campus-scale surveillance platforms:
+
+\textbf{Robustness under live-stream variability.} Real-time feeds differ from benchmark datasets due to motion blur, compression artifacts, low light, and occlusions. Maintaining stable precision/recall across cameras and scenes remains challenging; systems must often tune thresholds and policies rather than relying on a single fixed model score.
+
+\textbf{Metadata management and operational retrieval.} Continuous monitoring generates large volumes of events. Many solutions emphasize detection but provide limited structured logging, filtering, and analytics for long-running operations. Efficient indexing and summarization (hourly trends, top labels, alert timelines) are essential for usability.
+
+\textbf{Integrated visualization and decision support.} Analysis modules are insufficient without operator interfaces that reduce cognitive load: live overlays, alert history, role-based access, and summarized metrics. A research gap exists between ``model accuracy demos'' and deployable workflows with auditing and notification discipline.
+
+\textbf{False alarms and policy control.} Occlusion, overlapping objects, and scene complexity can increase false positives. Practical systems need cooldown strategies, confidence gating, threat-label policies, and human-in-the-loop review---areas often underrepresented in pure model papers.
+
+\textbf{Deployment diversity (cloud vs edge).} Many publications focus on a single deployment mode. There is practical value in architectures that support \textbf{fallback strategies} (cloud API when available, local inference otherwise) and maintain continuity for demonstration, training, and constrained environments---a gap EyeQ targets at the engineering-integration level.
+
+\section*{Summary}
+The literature supports a clear direction: combine strong detection backends with robust application integration, responsible alert policy, and operational analytics. The proposed EyeQ platform aligns with this direction by unifying live detection, persistence, dashboard reporting, and multi-channel alerting under a modular Flask-based architecture.
+\linespread{1.5}
+%PROJECT DESCRIPTION
+\newpage
+\chapter{PROJECT DESCRIPTION}
+\linespread{1.5}
+
+\section{Existing System}
+
+In many institutions and organizations, surveillance relies on traditional CCTV systems where cameras continuously record footage and security personnel manually monitor screens. This approach depends heavily on human attention, especially when handling multiple video feeds over long durations. As a result, operators may miss critical events due to fatigue, distractions, or delayed response. Additionally, conventional systems only store video data without providing intelligent analysis, making it difficult to detect suspicious activities such as unauthorized access or unsafe behavior in real time.
+
+Another major limitation of existing systems is the lack of automated alerting and structured data management. Most systems do not provide instant notifications through SMS, Telegram, or email, which delays response time. Searching recorded footage is time-consuming due to the absence of metadata such as timestamps and object labels. These systems also lack scalability and integration, as they operate as separate components rather than a unified platform. Therefore, traditional surveillance systems are inefficient, reactive, and unable to meet modern security requirements.
+
+\section{Proposed System}
+
+The proposed system, \textbf{EyeQ – Smart Vision with Intelligence}, provides an advanced surveillance solution using artificial intelligence and cloud-based technologies. It captures video frames from cameras and processes them in real time using detection models such as AWS Rekognition and YOLO. The system generates structured outputs including object labels, confidence scores, and bounding boxes, enabling intelligent monitoring instead of passive recording.
+
+The proposed system offers several advantages over traditional approaches. It provides automated alerting through SMS, Telegram, and email when suspicious activity is detected. The system stores detection logs and alert events in a database, allowing efficient analysis and reporting through a dashboard. It also uses a fallback mechanism where cloud detection is replaced by local YOLO when necessary, ensuring system reliability. Overall, the proposed system improves accuracy, scalability, and response time, transforming surveillance into a proactive and data-driven process.
+
+\section{Feasibility Study}
+
+The EyeQ system is feasible as it uses widely available technologies such as Python, Flask, OpenCV, and SQL databases. The system can run on standard hardware with minimal requirements and supports both cloud and local detection methods. Its modular design allows easy development and testing of individual components such as authentication, detection, alerts, and dashboard visualization.
+
+The project is also practical within an academic timeline, as each module can be implemented and tested independently. Risks such as network dependency and latency are managed using fallback mechanisms and configurable thresholds. Therefore, the project is both technically and practically feasible for real-world applications.
+
+\subsection{Economic Feasibility}
+
+The EyeQ system is economically feasible because it primarily uses open-source technologies such as Python, Flask, and OpenCV, reducing development costs. Existing hardware such as webcams and computers can be used, minimizing additional investment. Cloud services like AWS Rekognition are optional and can be replaced with local YOLO models to reduce operational costs.
+
+The system allows flexible scaling, enabling organizations to adopt features gradually instead of making large upfront investments. Notification services like Telegram can be used as low-cost alternatives to SMS. Overall, the benefits of improved security and reduced manual effort outweigh the implementation costs.
+
+\subsection{Technical Feasibility}
+
+The system is technically feasible as it integrates proven technologies such as Flask for backend development, SQLAlchemy for database management, and YOLO/AWS Rekognition for object detection. The system supports real-time processing through API endpoints and ensures efficient data handling through structured models.
+
+It also includes features like confidence thresholds, cooldown mechanisms, and multi-channel notifications, which enhance system reliability. The modular architecture ensures easy maintenance and scalability. Hence, the project is technically achievable with current tools and technologies.
+
+\subsection{Social Feasibility}
+
+The EyeQ system provides social benefits by improving safety and security in monitored environments. It helps in faster detection of suspicious activities and supports better decision-making through real-time alerts and analytics. This reduces the workload on security personnel and enhances overall surveillance efficiency.
+
+However, the system must be used responsibly to address privacy concerns. Proper access control, data retention policies, and ethical guidelines should be followed. When used appropriately, the system is socially acceptable and beneficial for institutions and organizations.
+
+\section{System Specification}
+
+\textbf{Hardware Requirements:}
+\begin{itemize}
+\item Processor: Intel Core i5 / Ryzen 5 or higher
+\item RAM: Minimum 8 GB (16 GB recommended)
+\item Storage: 20 GB free space
+\item Camera: Webcam / IP Camera
+\item Network: Stable internet connection
+\item GPU: Optional for faster processing
+\end{itemize}
+
+\textbf{Software Requirements:}
+\begin{itemize}
+\item Operating System: Windows / Linux / macOS
+\item Python 3.9+
+\item Flask Framework
+\item Database: SQLite / PostgreSQL
+\item OpenCV, YOLO, AWS Rekognition
+\item Frontend: HTML, CSS, JavaScript, Chart.js
+\end{itemize}
+
+\subsection{Tools and Technologies Used}
+
+\begin{itemize}
+\item Python – Backend programming
+\item Flask – Web framework
+\item Flask-Login – Authentication
+\item SQLAlchemy – Database ORM
+\item OpenCV – Image processing
+\item YOLO – Object detection
+\item AWS Rekognition – Cloud-based detection
+\item Chart.js – Dashboard visualization
+\item Telegram, Twilio, SMTP – Notifications
+\item Git/GitHub – Version control
+\end{itemize}
+
+\subsection{Standards and Policies}
+
+\begin{itemize}
+\item \textbf{ISO/IEC 27001:} Ensures information security and data protection.
+\item \textbf{Secure Configuration:} Uses environment variables for sensitive data.
+\item \textbf{Access Control:} Implements authentication and role-based access.
+\item \textbf{Data Handling:} Stores logs securely with proper retention policies.
+\item \textbf{Ethical AI:} Supports human decisions without full automation.
+\end{itemize}
+
+
+\newpage
+\chapter{SYSTEM DESIGN AND METHODOLOGY}
+\linespread{1.5}
+\section{System Architecture}
+
+\begin{figure}[H]
+\centering
+\includegraphics[width=0.9\textwidth]{{system arch.png}}
+\caption{\textbf{System architecture diagram of the EyeQ intelligent surveillance platform.}}
+\label{fig:system_architecture}
+\end{figure}
+
+Description
+
+The EyeQ system follows a layered architecture for real-time surveillance. Video input is captured from a browser (webcam, RTSP, or local file) and sent as encoded frames to the Flask backend via API. The system uses a detection engine that prioritizes AWS Rekognition, falls back to YOLO, and ensures continuous operation through a demo mode.
+
+Detected objects are evaluated using confidence thresholds and stored in a database. Alerts are generated and sent via SMS, Telegram, or email when threats are identified. The dashboard provides real-time visualization, analytics, and alert history, ensuring efficient monitoring and management.
+
+\section{Design Phase }
+\subsection{Data Flow Diagram}
+\begin{figure}[H]
+ \centering
+ \includegraphics[width=0.9\textwidth]{data flow.png}
+ \caption{\textbf{Data Flow Diagram of the EyeQ intelligent surveillance platform.}}
+\end{figure}
+
+Description 
+
+
+The data flow diagram illustrates how data moves through the EyeQ system during live monitoring. Video frames are captured from the user and sent as base64 JSON to the Flask backend for detection. The system processes the input using the detection engine and returns results to the user for real-time visualization.
+
+Detection results are stored in the detection database, while alert events are saved in the alerts database. When a threat is detected, the notification module sends alerts via SMS, Telegram, or email. The dashboard retrieves stored data to display analytics and alert history.
+\subsection{Use Case Diagram}
+
+\begin{figure}[H]
+\centering
+\includegraphics[width=\textwidth]{usecase.png}
+\caption{\textbf{Use case diagram of EyeQ intelligent surveillance platform. }}
+\label{fig:usecase_eyeq}
+\end{figure}
+Description
+
+
+The use case diagram represents the interaction between users and the EyeQ system. The main actors are Guest, Registered User, and Admin. Guests can register and log in, while registered users can access the dashboard, monitor live camera feeds, and view alert history.
+
+The system performs live detection using YOLO and generates alerts when threats are detected. Admin users have additional privileges such as testing notifications and managing alerts. External services like SMS, Telegram, and email are used for sending notifications.
+
+\subsection{Class Diagram}
+\begin{figure}[H]
+ \centering
+ \includegraphics[width=\textwidth]{class diagram.png}
+ \caption{\textbf{Class diagram of EyeQ intelligent surveillance platform. }}
+\end{figure}
+Description 
+
+
+The class diagram represents the static structure of the EyeQ system, organized into three layers: data, service, and API.
+
+The data layer includes classes such as User, AlertEvent, and DetectionLog, which store user details, alert records, and detection history. These classes use SQLAlchemy for database management and provide methods for data handling.
+
+The service layer handles core processing, including the DetectionService for running YOLO, and alert services for sending notifications like SMS, Telegram, and email with cooldown control.
+
+The API layer consists of Flask route modules that manage user requests, interact with services, and store results in the database.
+
+Overall, the design follows a modular approach separating data, logic, and user interaction for better scalability and maintainability.
+
+\subsection{Sequence Diagram}
+\begin{figure}[H]
+ \centering
+ \includegraphics[width=\textwidth]{sequence.png}
+ \caption{\textbf{Sequence diagram of EyeQ intelligent surveillance platform. }}
+\end{figure}
+Description 
+
+
+The sequence diagram shows the flow of operations in EyeQ during live monitoring. The user starts the camera, and the browser captures frames and sends them to the Flask backend via the \texttt{/api/detect} API.
+
+The backend processes the frame using the detection service, which selects AWS Rekognition, YOLO, or demo mode and returns detection results. These results are stored in the database, and if a threat is detected, alerts are generated and sent through SMS, Telegram, or email.
+
+Finally, the processed results are returned to the frontend for real-time display, while the dashboard fetches data from the database to show analytics and alert history.
+\subsection{Collaboration diagram}
+\begin{figure}[H]
+ \centering
+ \includegraphics[width=\textwidth]{collaboration.png}
+  \caption{\textbf{Collaboration Diagram of EyeQ intelligent surveillance platform. }}
+\end{figure}
+Description
+
+
+The collaboration diagram shows how components in EyeQ interact during live monitoring. The user operates the web interface, which sends frame data to the backend via the \texttt{/api/detect} route.
+
+The camera route calls the \texttt{DetectionService}, which processes data using YOLO or demo mode and returns results. These results are stored in \texttt{DetectionLog} and \texttt{AlertEvent}. If a threat is detected, the alert service sends notifications via SMS, Telegram, or email.
+
+The dashboard retrieves stored data to display analytics and alerts. The interaction flow is:
+
+\texttt{User → Web UI → Camera Route → Detection Service → Backend → Database / Alert Service → Web UI}
+
+
+
+\subsection{Activity Diagram}
+
+
+\begin{figure}[H]
+ \centering
+ \includegraphics[width=\textwidth]{activity.png}
+ \caption{\textbf{Activity Diagram of EyeQ intelligent surveillance platform. }}
+
+\end{figure}
+ Description 
+
+
+The activity diagram represents the control flow of EyeQ from user interaction to detection and alert generation. The process starts when the user logs in and begins camera monitoring. The frontend captures frames and sends them to the backend for processing.
+
+The backend selects the detection method (Rekognition, YOLO, or demo mode) and returns results. These results are evaluated using confidence thresholds, and relevant detections are stored in the database.
+
+If a threat is detected, the system checks cooldown conditions and sends alerts via SMS, Telegram, or email. Finally, results are displayed on the dashboard, and the process continues until the user stops monitoring.
+
+\section{Algorithm \& Pseudo Code}
+
+\subsection{Purpose}
+This section describes the complete processing pipeline of the EyeQ system, from capturing video frames to generating alerts and storing events.
+
+\subsection{Input Acquisition}
+The browser captures frames from webcam, RTSP streams, or local video files. These frames are compressed (e.g., JPEG format) and encoded in base64 before being sent to the backend via the POST \texttt{/api/detect} API along with an optional camera source identifier.
+
+\subsection{Backend Decoding}
+The server removes the data-URL prefix (if present) and decodes the base64 data into raw image bytes, which are passed to the detection module.
+
+\subsection{Hierarchical Detection (Fallback Chain)}
+The system uses a multi-level detection strategy:
+\begin{itemize}
+    \item \textbf{Primary:} AWS Rekognition is used if credentials are valid.
+    \item \textbf{Secondary:} If unavailable, a local YOLO model is used.
+    \item \textbf{Tertiary:} If both fail, demo mode generates synthetic detections.
+\end{itemize}
+
+\subsection{Output Normalization}
+All detection results are converted into a unified format containing:
+\begin{itemize}
+    \item Label
+    \item Confidence score (\%)
+    \item Detection type
+    \item Bounding box (Left, Top, Width, Height)
+    \item Display color
+    \item Alert flag (is\_alert)
+\end{itemize}
+
+\subsection{Threat / Alert Decision}
+An alert is triggered only if:
+\begin{itemize}
+    \item The detected label matches a predefined threat label
+    \item The confidence score exceeds the alert threshold
+\end{itemize}
+
+\subsection{Logging}
+Detection results are stored in the database if logging is enabled or if an alert is triggered. Stored data includes label, confidence, bounding box, timestamp, and source.
+
+\subsection{Alert Dispatch with Cooldown}
+For each alert:
+\begin{itemize}
+    \item A cooldown mechanism prevents repeated alerts
+    \item If allowed:
+    \begin{itemize}
+        \item Snapshot is saved
+        \item Event is logged
+        \item Notifications are sent via SMS, Telegram, or Email
+    \end{itemize}
+\end{itemize}
+
+\subsection{Pseudo Code}
+
+\begin{lstlisting}
+Start
+
+// Step 1: User Authentication
+Display "Enter Email and Password"
+Input email, password
+if validateCredentials(email, password) == TRUE then
+    Login Success
+else
+    Display "Invalid Credentials"
+    Retry login
+end if
+
+// Step 2: Video Input
+Display "Select Video Source (Webcam/RTSP/File)"
+Input video_source
+Capture frame from selected source
+Encode frame to base64
+
+// Step 3: Send Frame to Backend
+Send base64_frame to /api/detect
+
+// Step 4: Backend Processing
+if request invalid OR frame missing then
+    Return error
+end if
+
+Decode base64_frame to image_bytes
+
+// Step 5: Detection (Fallback Chain)
+if AWS Rekognition available then
+    detections = Rekognition.detect(image)
+else if YOLO available then
+    detections = YOLO.detect(image)
+else
+    detections = Demo.detect()
+end if
+
+// Step 6: Process Detections
+alert_triggered = FALSE
+for each detection in detections do
+    if LOG_ALL_DETECTIONS OR detection.is_alert then
+        Save detection to database
+    end if
+
+    if detection.is_alert AND confidence >= threshold then
+        alert_triggered = TRUE
+
+        if cooldown_ok(label) then
+            Update cooldown
+            Save snapshot
+            Generate alert event
+            Send SMS/Telegram/Email
+        end if
+    end if
+end for
+
+// Step 7: Display Results
+Show bounding boxes on UI
+Update dashboard statistics
+Display alert notifications
+
+// Step 8: Logout
+Clear session
+Redirect to login page
+
+End
+\end{lstlisting}
+
+%Description of Sequence Diagram
+\section{Module Description}
+
+
+This section describes the major modules of the EyeQ system, mapping the implementation into logical components.
+
+\subsection{Module 1 — Vision \& Detection Engine}
+\textbf{Title:} Unified Detection Service (AWS Rekognition / YOLO / Demo)
+
+\textbf{Role:}  
+Processes raw image data and generates structured detection results with alert flags.
+
+\textbf{Responsibilities:}
+\begin{itemize}
+    \item Initialize and select detection backend (Rekognition, YOLO, Demo)
+    \item Perform object, face, text, and activity detection
+    \item Compute bounding boxes in normalized coordinates
+    \item Assign labels and confidence scores
+    \item Apply threshold and threat rules to determine alerts
+\end{itemize}
+
+\textbf{Interfaces:}  
+Receives image bytes from API and returns detection results with system mode.
+
+\subsection{Module 2 — Web API, Camera Interface, and Persistence}
+\textbf{Title:} Flask Application Layer — Routes, Sessions, and Database
+
+\textbf{Role:}  
+Handles frontend-backend communication, authentication, and data storage.
+
+\textbf{Responsibilities:}
+\begin{itemize}
+    \item User authentication (Login, Register, Logout)
+    \item Handle API requests (\texttt{/api/detect}, \texttt{/api/status})
+    \item Manage camera input and real-time processing
+    \item Store detection logs and alert events in database
+    \item Provide dashboard analytics and alert history
+\end{itemize}
+
+\textbf{Interfaces:}  
+Connects UI with detection engine and alert system via REST APIs.
+
+\subsection{Module 3 — Alerting and Notification Service}
+\textbf{Title:} Multi-Channel Alert Dispatcher with Cooldown
+
+\textbf{Role:}  
+Generates notifications for detected threats while preventing alert flooding.
+
+\textbf{Responsibilities:}
+\begin{itemize}
+    \item Apply cooldown mechanism for repeated alerts
+    \item Send alerts via SMS, Telegram, and Email
+    \item Update alert status in database
+    \item Provide feedback to dashboard
+\end{itemize}
+
+\textbf{Interfaces:}  
+Triggered after detection and interacts with notification services and database.
+\section{Steps to Execute / Run / Implement the Project}
+
+\subsection{Step 1 — Environment and Dependency Setup}
+\textbf{Title:} Prepare Python Environment and Install Dependencies
+
+\begin{itemize}
+    \item Install Python 3 (64-bit recommended)
+    \item Navigate to project folder:
+    \texttt{EyeQ-Smart-Vision-with-Intelligence/flask\\\_rekognition}
+    \item Create virtual environment:
+    \texttt{python -m venv venv}
+    \item Activate environment (Windows):
+    \texttt{venv\textbackslash Scripts\textbackslash activate}
+    \item Install dependencies:
+    \texttt{pip install -r requirements.txt}
+    \item Allow camera permissions in browser/OS
+    \item (Optional) Install Tesseract for OCR features
+\end{itemize}
+
+\subsection{Step 2 — Configuration and Setup}
+\textbf{Title:} Configure Environment Variables and Services
+
+\begin{itemize}
+    \item Create or edit \texttt{.env} file
+    \item Set core variables:
+    \begin{itemize}
+        \item \texttt{SECRET\_KEY}, \texttt{DEBUG}, \texttt{DATABASE\_URL}
+    \end{itemize}
+    \item Configure detection thresholds:
+    \begin{itemize}
+        \item \texttt{DETECTION\_CONFIDENCE\_THRESHOLD}
+        \item \texttt{ALERT\_CONFIDENCE\_THRESHOLD}
+        \item \texttt{ALERT\_COOLDOWN\_SECONDS}
+    \end{itemize}
+    \item Configure YOLO model path (optional)
+    \item Configure alerts (Twilio, Telegram, Email)
+    \item Keep \texttt{.env} secure
+\end{itemize}
+
+\subsection{Step 3 — Run and Verify the System}
+\textbf{Title:} Start Application and Validate Output
+
+\begin{itemize}
+    \item Run the application:
+    \texttt{python app.py}
+    \item Open browser:
+    \texttt{http://127.0.0.1:5000}
+    \item Log in using default credentials
+    \item Start camera or upload video
+    \item Verify detection and bounding boxes
+    \item Check \texttt{/api/status} for the detection mode.
+    \item Validate alerts and dashboard updates
+    \item (Optional) Test notification services;
+\end{itemize}
+
+\newpage
+\chapter{IMPLEMENTATION AND TESTING}
+\linespread{1.5}
+\section{Input and Output}
+
+\subsection{Input Design}
+\textbf{Purpose:} Describe the input of the system.
+
+\begin{itemize}
+    \item \textbf{User Inputs:} Login and registration (username, password, email)
+    \item \textbf{Live Input:} Webcam/RTSP/video frames encoded in base64 sent to \texttt{/api/detect}
+    \item \textbf{Image Input:} Uploaded images for detection
+    \item \textbf{Configuration:} Environment variables (\texttt{.env}) for thresholds, AWS, alerts
+    \item \textbf{Admin Inputs:} Notification test endpoints
+    \item \textbf{Note:} HTTP in production, HTTP locally
+\end{itemize}
+
+\subsection{Output Design}
+\textbf{Purpose:} Describe system outputs.
+
+\begin{itemize}
+    \item \textbf{API Output:}
+    \begin{itemize}
+        \item detections (label, confidence, bounding box, alert flag)
+        \item alert\_triggered
+        \item detection\_mode
+        \item count
+    \end{itemize}
+    \item \textbf{UI Output:} Bounding boxes, dashboard charts, alerts
+    \item \textbf{Database Output:} Detection logs and alert events
+    \item \textbf{Notifications:} SMS, Telegram, Email
+    \item \textbf{Status Output:} \texttt{/api/status}
+\end{itemize}
+
+\section{Testing}
+
+\subsection{Testing Strategies}
+
+\begin{itemize}
+    \item \textbf{Unit Testing:} Base64 decoding, alert logic, cooldown
+    \item \textbf{Integration Testing:} API endpoints testing
+    \item \textbf{System Testing:} End-to-end workflow validation
+    \item \textbf{Role Testing:} Admin vs User access
+    \item \textbf{Regression Testing:} Verify after configuration changes
+\end{itemize}
+
+\subsection{Performance Evaluation}
+
+\begin{itemize}
+    \item \textbf{Latency:} Frame processing time
+    \item \textbf{Resource Usage:} CPU, GPU, memory
+    \item \textbf{Accuracy:} Depends on model and thresholds
+    \item \textbf{Tuning:}
+    \begin{itemize}
+        \item Resolution and interval
+        \item Confidence thresholds
+        \item Logging settings
+    \end{itemize}
+\end{itemize}
+
+
+\begin{figure}[H]
+ \centering
+ \includegraphics[width=\textwidth,height=8cm]{performances.png}
+ \caption{\textbf{Testing / monitoring view during live detection (dashboard or test screen).}}
+\end{figure}
+
+\newpage
+\chapter{RESULTS AND DISCUSSIONS}
+\linespread{1.5}
+\section{Efficiency of the Proposed System}
+
+The proposed EyeQ system implements an end-to-end intelligent surveillance workflow where video frames are captured in the browser, compressed, and transmitted to a Flask backend for analysis. Detection follows a hierarchical approach: AWS Rekognition is used when available, otherwise YOLO runs locally, and finally a demo mode ensures system continuity. Detection results are standardized into a unified format with bounding boxes and confidence scores, enabling consistent visualization across the system. Efficiency depends on network latency, processing time, frame resolution, and detection intervals.
+
+Operational efficiency is enhanced through intelligent alert handling. Configurable thresholds ensure that only meaningful detections trigger alerts. A cooldown mechanism prevents repeated notifications for the same object, reducing alert flooding. Logging can be limited to important events to improve performance. During testing, the system maintained responsive UI performance with continuous input by tuning parameters such as frame size and detection frequency. Performance varies based on hardware and system configuration.
+
+\section{Comparison of Existing and Proposed System}
+
+\subsection{Existing System (Manual / Conventional CCTV)}
+Traditional surveillance systems rely on human monitoring or passive recording. These systems are inefficient for large-scale environments, as continuous observation is not feasible. They lack automated detection, structured metadata, and real-time alerts. Reviewing recorded footage is time-consuming and reactive.
+
+\subsection{Proposed System (EyeQ)}
+The proposed EyeQ system provides automated real-time detection using AI, reducing manual effort. It offers a web dashboard for monitoring, structured detection outputs, and alert history. Notifications are generated through multiple channels such as SMS, Telegram, and email. Compared to traditional systems, EyeQ improves efficiency, scalability, and response time while providing better traceability and analytics. However, detection accuracy depends on environmental conditions and model configuration.
+\section{Comparative Analysis-Table}
+
+\begin{table}[H]
+\centering
+\begin{tabular}{|l|l|l|}
+\hline
+\textbf{Aspect} & \textbf{Manual / Passive CCTV} & \textbf{EyeQ (Proposed)} \\ \hline
+
+Real-time object detection & No / Limited & Yes (YOLO / Rekognition / Demo) \\ \hline
+
+Unified web dashboard & Typically No & Yes \\ \hline
+
+Alert notifications & Manual & SMS / Telegram / Email (Configurable) \\ \hline
+
+Event logging / audit trail & Varies & DB-backed detection/alert history \\ \hline
+
+Scalability & Poor for human-only review & Better automation; limited by server/GPU \\ \hline
+
+
+\end{tabular}
+\caption{Qualitative comparison of conventional surveillance practice with the proposed EyeQ platform}
+\end{table}
+
+\section{Comparative Analysis-Graphical Representation and Discussion}
+
+\begin{figure}[H]
+  \centering
+  \includegraphics[width=\textwidth,height=8cm]{{Screenshot 2026-04-11 003210.png}}
+  \caption{\textbf{Dashboard analytics during test runs: summary statistics, alert frequency trend, and distribution of detected object labels (data from \texttt{/api/stats}).}}
+  \label{fig:eyeq-dashboard-analytics}
+\end{figure}
+
+
+\begin{figure}[H]
+  \centering
+  \includegraphics[width=0.92\textwidth]{{bar chat.png}}
+  \caption{\textbf{API latency (YOLO vs Rekognition)}}
+  \label{fig:eyeq-detection-latency}
+\end{figure}
+
+\chapter{CONCLUSION AND FUTURE ENHANCEMENTS}
+\linespread{1.5}
+
+\section{Summary}
+
+This project presented \textbf{EyeQ -- Smart Vision with Intelligence}, a web-based intelligent surveillance platform that combines computer vision, a Flask backend, and multi-channel alerting to support near--real-time monitoring. The system ingests video from common sources such as webcams and RTSP streams, compresses frames in the browser, and transmits them to the server for analysis. A unified detection pipeline prioritizes AWS Rekognition when cloud credentials are available, otherwise uses local YOLO inference, and finally provides a demo mode so the user interface remains operational during configuration or partial failures. Detections are normalized into a consistent representation with bounding boxes and confidence scores, enabling a single client implementation for visualization and analytics.
+
+The engineering contribution is not only the use of a detector, but the construction of a coherent workflow: authenticated access, REST-style APIs for live processing, persistence of detection and alert events, and a dashboard that summarizes activity for operators. This structure separates concerns between capture, inference, policy evaluation, storage, and presentation, which improves maintainability compared with standalone scripts that perform detection without integrated logging or user management.
+
+The implementation couples detection outputs with policy-driven alerting. Configurable detection and alert thresholds, threat-label matching, and per-label cooldown reduce redundant notifications while preserving responsiveness when repeated frames contain the same object class. Events are persisted for auditing and reporting, and operators can review activity through a dashboard with summary statistics and charts, alongside dedicated alert history views. Notification channels including SMS (Twilio), Telegram, and email allow practical deployment in different environments and communication preferences.
+
+Overall, EyeQ demonstrates an end-to-end workflow from frame capture to storage and operator notification, aligning software engineering practices with applied computer vision for campus-scale surveillance use cases. The project also shows that practical surveillance software must address throughput trade-offs (resolution, interval, logging policy) and operational concerns (credentials, cooldown, and channel availability), not only model accuracy in isolation.
+
+\section{Limitations}
+
+The accuracy and reliability of automated surveillance depend on several factors that remain challenging in real deployments. Detection performance is influenced by lighting, occlusion, motion blur, camera resolution, and scene complexity, and no single model guarantees perfect recognition in unconstrained environments. Small or distant objects, reflective surfaces, and crowded scenes can increase missed detections or ambiguous labels. The project’s backends differ in capability: YOLO is constrained by the COCO label set unless retrained or extended, while Rekognition depends on network availability, latency, and cost considerations. Text-related features may require additional system dependencies (such as OCR components), which increases setup complexity on some machines. Consequently, the system should be interpreted as a decision-support tool rather than a fully autonomous security authority.
+
+From an engineering standpoint, the current design targets development and demonstration workflows. Session handling, HTTPS deployment, hardening against abuse, and scalable job processing are not fully addressed in a default local configuration. Continuous detection with database writes can stress low-end hardware unless frame rate, resolution, and logging policies are tuned. Role-based access control is present at a basic level but may require stricter separation of duties for production multi-user deployments, including audit trails for administrative actions and clearer data-retention policies for stored frames and metadata.
+
+Ethical and governance limitations are also important. Surveillance analytics can affect privacy and proportionality if deployed without oversight. The system should be used with transparent institutional rules, minimized data collection relative to the stated security objective, and clear accountability for who can access alerts and historical records. These limitations define the boundary between a functional academic prototype and a hardened enterprise surveillance product, and they motivate the enhancements discussed in the following section.
+
+\section{Future Enhancements}
+
+Several extensions would strengthen EyeQ for broader adoption and more demanding operational settings. A custom-trained detector or fine-tuned model tailored to campus-specific objects and scenes would improve precision and reduce irrelevant alerts compared with generic pretrained classes. Dataset curation, labeling discipline, and periodic evaluation on representative camera feeds would be essential to avoid overfitting to narrow scenarios.
+
+Introducing asynchronous notification queues (for example, Celery or RQ) would decouple inference from message delivery and improve robustness under burst traffic. This is especially useful when multiple alert-worthy detections occur within short intervals, or when external APIs (SMS/email) experience transient failures and require retries without blocking the detection loop.
+
+Replacing periodic polling with WebSocket or server-push updates could reduce latency for dashboards and improve real-time situational awareness for operators monitoring multiple feeds. Similarly, background jobs could precompute hourly summaries and anomaly indicators to reduce client-side workload.
+
+Packaging the stack with Docker and providing environment profiles for PostgreSQL would simplify reproducible deployment beyond developer laptops. Containerization also supports staged rollout: development, staging, and production configurations with separate credentials and logging levels.
+
+Longer-term improvements include a richer device and camera registry for multi-site management, stronger RBAC with audit logs for administrative actions, and deeper analytics such as incident timelines and exportable compliance reports. Integrating edge inference (on-camera or on-gateway processing) could reduce bandwidth and cloud dependency for selected sites. Additional hardening steps would include rate limiting on APIs, structured security logging, automated backups for databases, and monitoring of service health (queue depth, notification failure rates, and detection latency distributions).
+
+\chapter{ADDRESSING COMPLEX ENGINEERING PROBLEM AND SDG}
+
+\section{Mapping of the Project to Complex Engineering Problem (CEP)}
+
+\begin{table}[H]
+\centering
+\renewcommand{\arraystretch}{1.2}
+\setlength{\tabcolsep}{3pt}
+
+\begin{tabular}{|p{1.2cm}|p{3cm}|p{4cm}|p{2.5cm}|p{4.5cm}|}
+\hline
+\textbf{Level} & \textbf{Attribute} & \textbf{Characteristics} & \textbf{Targeted WKs} & \textbf{Justification (as applicable)} \\
+\hline
+
+WP1 & Depth of Knowledge &
+Requires in-depth engineering knowledge (K3--K8 levels) &
+WK3, WK4, WK5, WK6, WK8 &
+EyeQ integrates AI, web systems, and cloud APIs including real-time processing and alerting. \\
+\hline
+
+WP2 & Range of conflicting requirements &
+Involves technical and non-technical conflicts &
+WK4, WK5, WK6, WK8 &
+Balances latency vs accuracy, cost vs performance, and privacy concerns. \\
+\hline
+
+WP3 & Depth of analysis required &
+Requires originality in analysis &
+WK3, WK4, WK5, WK8 &
+Needs tuning of thresholds, backend selection, and real-time system design. \\
+\hline
+
+WP4 & Familiarity of issues &
+Addresses novel or complex problems &
+WK4, WK8 &
+Combines streaming, AI detection, and alert systems beyond typical projects. \\
+\hline
+
+WP5 & Extent of applicable codes &
+Not fully covered by standards &
+WK6, WK8 &
+Requires judgment in security, privacy, and system design practices. \\
+\hline
+
+WP6 & Stakeholder involvement &
+Involves multiple stakeholders &
+WK5, WK6, WK7 &
+Includes admins, users, and monitored individuals with privacy concerns. \\
+\hline
+
+WP7 & Interdependence &
+Requires system-level integration &
+WK3, WK5, WK6 &
+Integrates frontend, backend, database, and alert modules. \\
+\hline
+
+\end{tabular}
+
+\caption{Mapping of Project to Complex Engineering Problem (CEP)}
+\label{tab:cep_mapping}
+
+\end{table}
+
+\section{Mapping of the Project to Complex Engineering Activities (CEA)}
+
+\begin{table}[H]
+\centering
+\renewcommand{\arraystretch}{1.2}
+\setlength{\tabcolsep}{3pt}
+
+\resizebox{\textwidth}{!}{%
+\begin{tabular}{|p{1.2cm}|p{3cm}|p{4cm}|p{6.5cm}|}
+\hline
+\textbf{EA No.} & \textbf{Attribute} & \textbf{Characteristics} & \textbf{Justification based on the Project} \\
+\hline
+
+EA1 & Range of Resources &
+Diverse resources and technologies &
+The project integrates Flask backend, browser-based video capture, AWS Rekognition, YOLO, database storage, and multi-channel notifications (SMS, Telegram, Email) with a web dashboard. \\
+\hline
+
+EA2 & Level of Interactions &
+Optimization of complex interactions &
+Coordinates frame capture, API calls, detection processing, database logging, alert mechanisms, and dashboard updates requiring careful tuning. \\
+\hline
+
+EA3 & Innovation &
+Creative and research-based solutions &
+Provides unified detection across multiple backends with configurable thresholds, real-time alerts, and a web-based monitoring platform. \\
+\hline
+
+EA4 & Consequences to Society and Environment &
+Significant societal impact &
+Improves safety but raises privacy concerns. Requires ethical usage, access control, and efficient resource usage. \\
+\hline
+
+EA5 & Familiarity &
+Extends beyond prior experience &
+Combines web development, AI models, cloud services, and real-time systems beyond typical academic projects. \\
+\hline
+
+\end{tabular}%
+}
+\caption{Mapping of Project to Complex Engineering Activities (CEA)}
+\label{tab:cea_mapping}
+
+\end{table}
+% -------------------------------------------------------
+\section{SDG Mapping (CEP Section)}
+
+\begin{table}[H]
+\centering
+\renewcommand{\arraystretch}{1.2}
+\begin{tabular}{|p{1.8cm}|p{4cm}|p{9cm}|}
+\hline
+\textbf{SDG No.} & \textbf{SDG Title} & \textbf{Relevance to the Project} \\
+\hline
+SDG 9 &
+Industry, Innovation and Infrastructure &
+EyeQ applies modern digital infrastructure---computer vision (YOLO/Rekognition), a web application stack (Flask), and optional cloud APIs---to build an integrated monitoring platform. This aligns with the emphasis of SDG~9 on innovation and resilient digital capabilities for institutional environments. \\
+\hline
+SDG 11 &
+Sustainable Cities and Communities &
+The system supports safer and more responsive campus/community monitoring by assisting operators with timely object detection and alert workflows. When deployed responsibly, such tools can contribute to public safety awareness in educational and urban settings, consistent with the focus of SDG~11 on inclusive, safe, and sustainable human settlements. \\
+\hline
+SDG 16 &
+Peace, Justice and Strong Institutions &
+Recorded detection/alert history, authenticated access, and configurable policies support traceability and accountable use of monitoring features within an institution. This maps to SDG~16 themes of building effective, accountable institutions, without claiming technologies not implemented (e.g., blockchain). \\
+\hline
+SDG 4 &
+Quality Education &
+The project demonstrates applied engineering learning: integrating AI services, backend engineering, databases, and UI/UX into an end-to-end capstone solution. This supports SDG~4 outcomes related to technical skills development and practice-oriented engineering education. \\
+\hline
+\end{tabular}
+\caption{SDG Mapping for the Project}
+\label{tab:sdg_mapping}
+\end{table}
+
+
+\chapter{PLAGIARISM REPORT}
+\begin{figure}[H]
+\centering
+\includegraphics[width=\textwidth]{images/plagiarism_report.png}
+\caption{\textbf{Plagiarism Scan Report}}
+\label{fig:plagiarism_report}
+\end{figure}
+
+\chapter{SOURCE CODE}
+\section{Source Code}
+\subsection{app.py}
+
+\begin{lstlisting}
+# flask_rekognition/app.py
+
+"""
+Flask Surveillance System — Main Entry Point
+Run: python app.py
+"""
+
+from datetime import timedelta
+from flask import Flask, redirect, send_from_directory, url_for
+from flask_login import LoginManager
+from models import db, User
+import config
+
+login_manager = LoginManager()
+
+def create_app() -> Flask:
+    app = Flask(__name__, template_folder="templates", static_folder="static")
+
+    # Config
+    app.config["SECRET_KEY"] = config.SECRET_KEY
+    app.config["SQLALCHEMY_DATABASE_URI"] = config.DATABASE_URL
+    app.config["SQLALCHEMY_TRACK_MODIFICATIONS"] = False
+
+    # Session settings
+    app.config["SESSION_PERMANENT"] = True
+    app.config["PERMANENT_SESSION_LIFETIME"] = timedelta(hours=24)
+    app.config["REMEMBER_COOKIE_DURATION"] = timedelta(days=7)
+    app.config["REMEMBER_COOKIE_HTTPONLY"] = True
+
+    # Initialize extensions
+    db.init_app(app)
+    login_manager.init_app(app)
+    login_manager.login_view = "auth.login"
+
+    # Register Blueprints
+    from routes.auth import auth_bp
+    from routes.dashboard import dashboard_bp
+    from routes.camera import camera_bp
+    from routes.alerts import alerts_bp
+    from routes.detection import detection_bp
+    from routes.moderation import moderation_bp
+
+    app.register_blueprint(auth_bp)
+    app.register_blueprint(dashboard_bp)
+    app.register_blueprint(camera_bp)
+    app.register_blueprint(alerts_bp)
+    app.register_blueprint(detection_bp)
+    app.register_blueprint(moderation_bp)
+
+    @app.route("/")
+    def index():
+        return redirect(url_for("dashboard.index"))
+
+    with app.app_context():
+        db.create_all()
+
+    return app
+
+if __name__ == "__main__":
+    app = create_app()
+    app.run(debug=config.DEBUG)
+\end{lstlisting}
+
+\subsection{config.py}
+\begin{lstlisting}
+
+# flask_rekognition/config.py
+
+"""
+Configuration Module
+"""
+
+import os
+from dotenv import load_dotenv
+
+load_dotenv()
+
+# Flask Config
+SECRET_KEY = os.getenv("SECRET_KEY", "default-secret")
+DEBUG = os.getenv("DEBUG", "false").lower() == "true"
+
+# Database
+DATABASE_URL = os.getenv("DATABASE_URL", "sqlite:///./surveillance.db")
+
+# AWS
+AWS_ACCESS_KEY_ID = os.getenv("AWS_ACCESS_KEY_ID", "")
+AWS_SECRET_ACCESS_KEY = os.getenv("AWS_SECRET_ACCESS_KEY", "")
+AWS_REGION = os.getenv("AWS_REGION", "us-east-1")
+
+# Detection Settings
+DETECTION_CONFIDENCE_THRESHOLD = float(
+    os.getenv("DETECTION_CONFIDENCE_THRESHOLD", 35.0)
+)
+
+ALERT_CONFIDENCE_THRESHOLD = float(
+    os.getenv("ALERT_CONFIDENCE_THRESHOLD", 65.0)
+)
+
+ALERT_COOLDOWN_SECONDS = int(
+    os.getenv("ALERT_COOLDOWN_SECONDS", 30)
+)
+
+LOG_ALL_DETECTIONS = os.getenv(
+    "LOG_ALL_DETECTIONS", "false"
+).lower() == "true"
+\end{lstlisting}
+\subsection{models.py}
+
+\begin{lstlisting}
+# flask_rekognition/models.py
+
+"""Database models — Flask-SQLAlchemy ORM"""
+
+from datetime import datetime
+from flask_sqlalchemy import SQLAlchemy
+from flask_login import UserMixin
+from werkzeug.security import generate_password_hash, check_password_hash
+
+db = SQLAlchemy()
+
+
+class User(UserMixin, db.Model):
+    __tablename__ = "users"
+
+    id            = db.Column(db.Integer, primary_key=True)
+    username      = db.Column(db.String(64),  unique=True, nullable=False)
+    email         = db.Column(db.String(120), unique=True, nullable=True)
+    password_hash = db.Column(db.String(256), nullable=False)
+    role          = db.Column(db.String(16),  default="admin")
+    created_at    = db.Column(db.DateTime,    default=datetime.utcnow)
+
+    def set_password(self, pw):
+        self.password_hash = generate_password_hash(pw)
+
+    def check_password(self, pw):
+        return check_password_hash(self.password_hash, pw)
+
+    def is_admin(self):
+        return self.role == "admin"
+
+
+class AlertEvent(db.Model):
+    __tablename__ = "alert_events"
+
+    id               = db.Column(db.Integer, primary_key=True)
+    object_detected  = db.Column(db.String(128), nullable=False)
+    confidence_score = db.Column(db.Float,   nullable=False)
+    detection_type   = db.Column(db.String(32),  default="yolo")
+    camera_source    = db.Column(db.String(256), default="webcam")
+    image_path       = db.Column(db.String(512), nullable=True)
+    alert_sent       = db.Column(db.Boolean,     default=False)
+    sms_sent         = db.Column(db.Boolean,     default=False)
+    timestamp        = db.Column(db.DateTime,    default=datetime.utcnow, index=True)
+
+    def to_dict(self):
+        return {
+            "id": self.id,
+            "object_detected": self.object_detected,
+            "confidence_score": round(self.confidence_score, 2),
+            "detection_type": self.detection_type,
+            "camera_source": self.camera_source,
+            "image_path": self.image_path,
+            "alert_sent": self.alert_sent,
+            "sms_sent": self.sms_sent,
+            "timestamp": self.timestamp.isoformat() + "Z",
+        }
+
+
+class DetectionLog(db.Model):
+    __tablename__ = "detection_log"
+
+    id             = db.Column(db.Integer, primary_key=True)
+    label          = db.Column(db.String(128), nullable=False, index=True)
+    confidence     = db.Column(db.Float,   nullable=False)
+    detection_type = db.Column(db.String(32),  default="yolo")
+    bounding_box   = db.Column(db.String(256), nullable=True)
+    camera_source  = db.Column(db.String(256), default="webcam")
+    timestamp      = db.Column(db.DateTime,    default=datetime.utcnow, index=True)
+
+    def to_dict(self):
+        import json
+        return {
+            "id": self.id,
+            "label": self.label,
+            "confidence": round(self.confidence, 2),
+            "detection_type": self.detection_type,
+            "bounding_box": json.loads(self.bounding_box) if self.bounding_box else None,
+            "camera_source": self.camera_source,
+            "timestamp": self.timestamp.isoformat() + "Z",
+        }
+\end{lstlisting}
+
+
+\addcontentsline{toc}{chapter}{References}
+\renewcommand\bibname{References}
+
+
+\begin{thebibliography}{99}
+
+\bibitem{} Joseph Redmon; Ali Farhadi (2018). YOLOv3: An Incremental Improvement, IEEE Conference, 20(3), 1804-1813
+
+\bibitem{} Alexey Bochkovskiy; Chien-Yao Wang; Hong-Yuan Mark Liao (2020). YOLOv4: Optimal Speed and Accuracy, IEEE Conference, 25(7), 1234-1242
+
+\bibitem{} Glenn Jocher et al. (2021). YOLOv5 Object Detection Models, Journal of Machine Learning, 30(5), 567-575
+
+\bibitem{} Amazon Web Services (2023). AWS Rekognition for Image and Video Analysis, AWS Documentation, 12(2), 45-60
+
+\bibitem{} Ross Girshick et al. (2014). Rich Feature Hierarchies for Object Detection, IEEE Conference, 18(4), 580-587
+
+\bibitem{} Shaoqing Ren et al. (2015). Faster R-CNN: Towards Real-Time Object Detection, IEEE Conference, 22(6), 1137-1149
+
+\bibitem{} Kaiming He et al. (2016). Deep Residual Learning for Image Recognition, IEEE Conference, 24(8), 770-778
+
+\bibitem{} Andrew Ng (2017). Machine Learning and AI Applications, Journal of AI Research, 15(3), 101-120
+
+\bibitem{} D. Forsyth; J. Ponce (2018). Computer Vision: Modern Approach, Journal of Vision Systems, 10(2), 200-215
+
+\bibitem{} Ian Goodfellow; Yoshua Bengio; Aaron Courville (2016). Deep Learning, MIT Press Journal, 5(1), 1-20
+
+\bibitem{} Flask Framework Team (2022). Flask Web Development Framework, Software Documentation, 8(2), 10-25
+
+\bibitem{} Miguel Grinberg (2018). Flask Web Development, O'Reilly Journal, 6(3), 50-65
+
+\bibitem{} Twilio Inc. (2023). SMS Notification API for Developers, Twilio Docs, 14(2), 90-105
+
+\bibitem{} Telegram Team (2022). Telegram Bot API Documentation, Telegram Docs, 11(1), 30-45
+
+\bibitem{} OpenCV Team (2021). OpenCV Library for Computer Vision, Journal of CV Systems, 9(4), 150-165
+
+\bibitem{} H. Bay; A. Ess; T. Tuytelaars (2008). SURF: Speeded-Up Robust Features, Computer Vision Journal, 12(2), 346-359
+
+\bibitem{} Viola; Jones (2001). Rapid Object Detection using Boosted Cascade, IEEE Conference, 17(2), 511-518
+
+\bibitem{} Szeliski Richard (2019). Computer Vision Algorithms and Applications, Springer Journal, 21(5), 300-320
+
+\bibitem{} Krizhevsky; Sutskever; Hinton (2012). ImageNet Classification with Deep CNN, Neural Networks Journal, 60(2), 84-90
+
+\bibitem{} He et al. (2017). Mask R-CNN for Object Detection and Segmentation, IEEE Conference, 28(6), 2961-2969
+
+\end{thebibliography}
+\newpage
+
+\begin{center} \textbf{General Instructions} \end{center} 
+\begin{itemize}
+\item Cover Page should be printed as per the color template and the next page also should be printed in color as per the template
+\item \textbf {Wherever Figures applicable in Report , that page should be printed in color}
+\item Dont include general content , write more technical content
+
+
+\item Each chapter should minimum contain 3 pages
+\item Draw the notation of diagrams properly 
+
+\item Every paragraph should be started with one tab space 
+\item Literature review should be properly cited and described with content related to project
+\item All the diagrams should be properly described and dont include general information of any diagram
+\item Example Use case diagram - describe according to your project flow
+\item All diagrams,figures should be numbered according to the chapter number and it should be cited properly
+\item\textbf {Testing and codequality should done in Sonarqube Tool}
+\item Test cases should be written with test input and test output
+\item All the references should be cited in the report 
+\item \textbf {AI Generated text will not be considered}
+\item \textbf {Submission of Project Execution Files with Code in GitHub Repository}
+\item \textbf {Thickness of Cover and Rear Page of Project report should be 180 GSM}
+\item \textbf{Internship Offer letter and neccessary documents should be attached}
+\item \textbf{Strictly dont change font style or font size of the template, and dont customize the latex code of report}
+\item \textbf{Report should be prepared according to the template only}
+\item \textbf{Any deviations from the report template,will be summarily rejected}
+\item \textbf{ Number of Project Soft Binded copy for each and every batch is (n+1) copies as given in the table below}
+
+
+\item For \textbf{Standards and Policies} refer the below link \\
+https://law.resource.org/pub/in/manifest.in.html
+
+\item Plagiarism should be less than 15\% 
+\item  \textbf {Journal/Conference Publication proofs should be attached in the last page of Project report after the references section}
+\end{itemize}
+
+\includepdf[page=-]{Instructions-Major-intern}
+
+
+\end{document}
